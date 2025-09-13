@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
     email:{type:String, unique:true, required:true},
     password:{type:String, minlength:8, unique:true},
     profileimg:{type:String},
-    followers:[{type:mongoose.Schema.Types.ObjectId, ref:'User'}],
+    follower:[{type:mongoose.Schema.Types.ObjectId, ref:'User'}],
     following:[{type:mongoose.Schema.Types.ObjectId, ref:'User'}],
 },{timestamps:true})
 
