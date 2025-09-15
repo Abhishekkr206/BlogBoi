@@ -1,16 +1,25 @@
 const express = require("express")
-const Auth = require("../authMiddleware/authMiddleware")
+const Auth = require("../middleware/authMiddleware")
 const User = require("../models/user")
 const Userpost = require("../models/post")
 const Comment = require("../models/comment")
 
+//file uplode
+const fs = require("fs")
+const upload = require("../middleware/multerMiddleware")
+const cloudinary = require("../utils/cloudinary")
+
 const router = express.Router()
 
-router.post("/post", Auth, async (req,res)=>{
+router.post("/post", Auth, upload.single("img"), async (req,res)=>{
     try{
-        const {img, title, content} = req.body
+        if(!req.file) return res.status(400).json({ message: "No image uploaded" })
+        const result = await cloudinary.uploader.upload(req.file.path,{folder:"blogBoi"}) 
+        fs.unlinkSync(req.file.path)       
+
+        const {title, content} = req.body
         const blog = new Userpost({
-            img,
+            img: result.secure_url,
             title,
             content,
             author:req.user.id
@@ -348,3 +357,5 @@ router.delete("/post/:postid/unlike", Auth, async (req,res)=>{
         })   
     }
 })
+
+module.exports = router

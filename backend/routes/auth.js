@@ -1,12 +1,12 @@
 const express = require("express")
 const jwt = require("jsonwebtoken")
-const auth = require("./models/user")
+const auth = require("../models/user")
 const { findOne } = require("../models/user")
 
 require("dotenv").config()
 const JWT_SECRET = process.env.JWT_SECRET
 
-const router = express.Router
+const router = express.Router()
 router.use(express.json())
 
 router.post("/signup", async (req,res)=>{
@@ -83,3 +83,5 @@ router.post("/logout", async (req,res)=>{
         message:"logged out"
     });
 })
+
+module.exports = router

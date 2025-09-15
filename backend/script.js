@@ -5,6 +5,9 @@ const mongoose = require("mongoose")
 const cors = require("cors")
 const cookieParser =require("cookie-parser")
 
+const authRoute = require("./routes/auth")
+const blogRoute = require("./routes/post")
+
 require("dotenv").config();
 
 const app = express()
@@ -23,9 +26,8 @@ app.use(express.json())
 //   credentials: true,
 // }));
 
-// app.get('/', (req,res)=>{
-//     res.send("hi")
-// })
+app.use("/auth", authRoute);
+app.use("/blog", blogRoute);
     
 mongoose.connect(MONGO_URL).then(()=>
 app.listen(PORT, ()=>{console.log(`server is running on this port ${PORT}`)})).catch((err)=>{console.log(err)})
