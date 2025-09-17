@@ -20,7 +20,7 @@ router.post("/signup", async (req,res)=>{
 
         res.cookie("token", token,{
             httpOnly:true,
-            secure:true,
+            secure:FileSystemWritableFileStream,
             maxAge:24*60*60*1000,
             sameSite:"None",
             path:'/'
@@ -44,10 +44,10 @@ router.post("/login", async (req,res)=>{
             $or: [{ username: user }, { email: user }]
         })
 
-        if(!identifyuser) return res.status(401).json({message:"invaild credentials "})
+        if(!identifyuser) return res.status(401).json({message:"invaild user "})
         
-        const comparepassword = await auth.comparepass(password)
-        if(!comparepassword) return res.status(401).json({message:"invaild credentials "})
+        const comparepassword = await identifyuser.comparepass(password)
+        if(!comparepassword) return res.status(401).json({message:"invaild password "})
 
             
         const token = jwt.sign({id:identifyuser._id}, JWT_SECRET, {expiresIn:"1d"})
@@ -55,7 +55,7 @@ router.post("/login", async (req,res)=>{
 
         res.cookie("token", token,{
             httpOnly:true,
-            secure:true,
+            secure:false,
             maxAge:24*60*60*1000,
             sameSite:"None",
             path:'/'

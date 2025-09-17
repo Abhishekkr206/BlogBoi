@@ -5,7 +5,7 @@ const UserSchema = new mongoose.Schema({
     username:{type:String, unique:true, required:true},
     name:{type:String, required:true},
     email:{type:String, unique:true, required:true},
-    password:{type:String, minlength:8, unique:true},
+    password:{type:String, minlength:8},
     profileimg:{type:String},
     follower:[{type:mongoose.Schema.Types.ObjectId, ref:'User'}],
     following:[{type:mongoose.Schema.Types.ObjectId, ref:'User'}],
@@ -18,7 +18,7 @@ UserSchema.pre("save", async function(next){
 })
 
 
-UserSchema.method.comparepass = function(password){
+UserSchema.methods.comparepass = function(password){
     return bcrypt.compare(password, this.password)
 }
 

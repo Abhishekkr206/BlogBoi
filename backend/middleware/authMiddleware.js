@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 
 const Auth = (req,res,next) => {
     const token = req.cookies.token
-    if(!token) return res.status(400).json({message:"tokken not found"})
+    if(!token) return res.status(400).json({message:"token not found"})
     try{
         const user = jwt.verify(token, JWT_SECRET)
         req.user = user
@@ -15,7 +15,7 @@ const Auth = (req,res,next) => {
     }
     catch(err){
         res.status(401).json({
-            message:err
+            message:"invalid token"
         })
     }
 }

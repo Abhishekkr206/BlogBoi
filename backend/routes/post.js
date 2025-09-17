@@ -13,13 +13,16 @@ const router = express.Router()
 
 router.post("/post", Auth, upload.single("img"), async (req,res)=>{
     try{
-        if(!req.file) return res.status(400).json({ message: "No image uploaded" })
-        const result = await cloudinary.uploader.upload(req.file.path,{folder:"blogBoi"}) 
-        fs.unlinkSync(req.file.path)       
+        let imgUrl = "";
+        if(req.file){
+            const result = await cloudinary.uploader.upload(req.file.path,{folder:"blogBoi"}) 
+            fs.unlinkSync(req.file.path)
+            imgUrl = result.secure_url;
+        } 
 
         const {title, content} = req.body
         const blog = new Userpost({
-            img: result.secure_url,
+            img: imgUrl,
             title,
             content,
             author:req.user.id
@@ -120,7 +123,7 @@ router.get("/comment/:postid", async (req,res)=>{
             populate: {path:"author", select:"username profileimg"},
         })
         res.status(200).json({
-            message:CommentData.content
+            message:CommentData.comment
         })
     }
     catch (err) {
@@ -146,7 +149,7 @@ router.post("/comment/:commentid/reply", Auth, async(req,res)=>{
             reply:[]
         })
         const savedReply = await reply.save()
-        await Comment.findOneAndUpdate(commentid, {$push:{reply:savedReply._id}})
+        await Comment.findOneAndUpdate({ _id: commentid }, {$push:{reply:savedReply._id}})
 
         res.status(200).json({
             message:"Reply added "
@@ -161,10 +164,11 @@ router.post("/comment/:commentid/reply", Auth, async(req,res)=>{
 router.get("/comment/:commentid/reply", async (req,res)=>{
     try {
         const replyid = req.params.commentid
-        const parentComment = await Comment.findById(replyid)
+        const parentComment = await Comment.find({ post: replyid })
         .populate({path:"reply",
             populate:{path:"author", select:"username profileimg"}
         })
+        res.status(200).json(parentComment);
     } 
     catch (err) {
         res.status(500).json({
@@ -212,7 +216,7 @@ router.get("/user/:userid/follower", async (req,res)=>{
          const userFollower = await User.findById(findFollower).populate("follower", "username profileimg")
 
         res.status(200).json({
-            message:userFollower.following
+            message:userFollower.follower
         })
     }
     catch (err) {
@@ -222,7 +226,7 @@ router.get("/user/:userid/follower", async (req,res)=>{
     }
 })
 
-router.post("post/:postid/like", Auth, async(req,res)=>{
+router.post("/post/:postid/like", Auth, async(req,res)=>{
     try {
         const postid = req.params.postid
         const userid = req.user.id
@@ -286,7 +290,7 @@ router.delete("/comment/:commentid", Auth, async (req,res)=>{
         })   
     }
 })
-router.delete("/comment/:replyid", Auth, async (req,res)=>{
+router.delete("/comment/:replyid/reply", Auth, async (req,res)=>{
     try {
         const replyid = req.params.replyid
         const userid = req.user.id
@@ -317,7 +321,7 @@ router.delete("/user/:userid/unfollow", Auth, async (req,res)=>{
         const unfollowUser = req.params.userid
         const userid = req.user.id
                 
-        const userToUnfollow = await User.findById(unfollowUserId)
+        const userToUnfollow = await User.findById(unfollowUser)
         if (!userToUnfollow) {
             return res.status(404).json({ message: "User to unfollow not found" })
         }
