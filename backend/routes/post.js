@@ -74,7 +74,7 @@ router.get("/post/:postid", async (req,res)=>{
     }
 })
 
-//more work required here because we just don't need the post we need all the things like name username post follower following like
+//more work required here because we don't only need the posts we need all the things like name username post follower following like
 //for the user profile
 router.get("/user/:userid", async (req,res)=>{
     try {
@@ -195,6 +195,8 @@ router.post("/user/:userid/follow", Auth, async (req,res)=>{
         })   
     }
 })
+
+//not using this route but just keeping it for testing
 router.get("/user/:userid/following", async (req,res)=>{
     try {
         const findFollowing = req.params.userid
