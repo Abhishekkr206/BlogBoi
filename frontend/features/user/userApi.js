@@ -1,4 +1,4 @@
-import { api } from "../app/apiSlice";
+import { api } from "../../app/apiSlice";
 
 export const userApi = api.injectEndpoints({
     endpoints: (builder) => ({
@@ -22,3 +22,9 @@ export const userApi = api.injectEndpoints({
         }),
     })
 })
+
+export const {
+  useGetUserDataQuery,
+  useFollowUserMutation,
+  useUnfollowUserMutation,
+} = userApi;

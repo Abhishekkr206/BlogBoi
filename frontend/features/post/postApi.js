@@ -3,14 +3,14 @@ import { api } from "../../app/apiSlice";
 export const postApi = api.injectEndpoints({
     endpoints: (builder) => ({
         getPosts: builder.query({
-            query: ()=> "/post",
-            providesTags:(result) =>
-                result
-            ? [
-                ...result.map(({id}) => ({ type:"Post", id:_id})),
-                { type: "Post", id: "LIST" },
+          query: () => "/post",
+          providesTags: (result) =>
+            result?.message
+              ? [
+                  ...result.message.map(({ _id }) => ({ type: "Post", id: _id })),
+                  { type: "Post", id: "LIST" },
                 ]
-            : [{ type: "Post", id: "LIST" }],
+              : [{ type: "Post", id: "LIST" }],
         }),
         getPostById: builder.query({
             query: (postid) => `/post/${postid}`,
@@ -25,24 +25,26 @@ export const postApi = api.injectEndpoints({
             invalidatesTags:[{type:"Post", id:"LIST"}],
         }),
         likePost: builder.mutation({
-            query: (postId) => ({
-                url:`/post/${postId}/like`,
+            query: (postid) => ({
+                url:`/post/${postid}/like`,
                 method:"POST",
             }),
-        invalidatesTags: (result, error, postId) => [
-            { type: "Post", id: postId },
+        invalidatesTags: (result, error, postid) => [
+            { type: "Post", id: postid },
         ],
         }),
         deleteLike: builder.mutation({
-            query:(postid) =>({
-                url:`/post/${postid}/like`,
-                method:"DELETE",
-            }),
-            invalidatesTags:[{type:"Post", id: postid}]
+          query: (postid) => ({
+            url: `/post/${postid}/unlike`,
+            method: "DELETE",
+          }),
+          invalidatesTags: (result, error, postid) => [
+            { type: "Post", id: postid },
+          ],
         }),
         deletePost: builder.mutation({
             query: (postid) =>({
-                url:`/post${postid}`,
+                url:`/post/${postid}`,
                 method:"DELETE",
             }),
             invalidatesTags:[{type:"Post", id:"LIST"}],

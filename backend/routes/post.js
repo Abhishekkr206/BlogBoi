@@ -40,19 +40,22 @@ router.post("/post", Auth, upload.single("img"), async (req,res)=>{
 })
 
 //for the front page
-router.get("/post", async (req,res)=>{
-    try{
-        const blog = await Userpost.find()
-        res.status(200).json({
-            message:blog
-        })
-    }
-    catch(err){
-        res.status(500).json({
-            message:err.message
-        })
-    }
-})
+router.get("/post", async (req, res) => {
+  try {
+    const blog = await Userpost.find()
+      .populate({
+        path: "comment",       // comment array
+        populate: { path: "author", select: "username" } // author info bhi
+      })
+    res.status(200).json({
+      message: blog,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
 
 //for the specific post to see the full blog and comments
 router.get("/post/:postid", async (req,res)=>{
@@ -92,7 +95,7 @@ router.get("/user/:userid", async (req,res)=>{
 })
 
 //comments
-router.post("/comment/:postid", Auth, async (req,res)=>{
+router.post("/comment/:postid", async (req,res)=>{
     try {
         const {content} = req.body
         const post = req.params.postid

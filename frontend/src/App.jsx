@@ -1,180 +1,126 @@
-// // src/features/api/apiSlice.js
-// import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+// App.jsx
+import React, { useState } from "react";
+import {
+  useGetPostsQuery,
+  useAddPostMutation,
+  useLikePostMutation,
+  useDeleteLikeMutation,
+} from "../features/post/postApi";
 
-// export const apiSlice = createApi({
-//   reducerPath: "api",
-//   baseQuery: fetchBaseQuery({
-//     baseUrl: "https://your-backend.com/api", // change to your backend
-//     prepareHeaders: (headers, { getState }) => {
-//       const token = getState().auth.token; // assuming auth slice exists
-//       if (token) headers.set("Authorization", `Bearer ${token}`);
-//       return headers;
-//     },
-//   }),
-//   tagTypes: ["Post", "Comment"],
-//   endpoints: (builder) => ({
-//     // ================= POSTS =================
-//     getPosts: builder.query({
-//       query: () => "/posts",
-//       providesTags: ["Post"], // list tag
-//     }),
-//     getPostById: builder.query({
-//       query: (postId) => `/posts/${postId}`,
-//       providesTags: (result, error, postId) => [{ type: "Post", id: postId }],
-//     }),
-//     addPost: builder.mutation({
-//       query: (newPost) => ({
-//         url: "/posts",
-//         method: "POST",
-//         body: newPost,
-//       }),
-//       invalidatesTags: ["Post"], // refresh all posts list
-//     }),
-//     deletePost: builder.mutation({
-//       query: (postId) => ({
-//         url: `/posts/${postId}`,
-//         method: "DELETE",
-//       }),
-//       invalidatesTags: ["Post"],
-//     }),
+import {
+  useGetCommentsQuery,
+  useAddCommentMutation,
+  useAddReplyMutation,
+  useDeleteCommentMutation,
+  useDeleteReplyMutation,
+} from "../features/comment/commentApi";
 
-//     // ================= COMMENTS =================
-//     getComments: builder.query({
-//       query: (postId) => `/posts/${postId}/comments`,
-//       providesTags: (result, error, postId) => [{ type: "Comment", id: postId }],
-//     }),
-//     addComment: builder.mutation({
-//       query: ({ postId, content }) => ({
-//         url: `/posts/${postId}/comments`,
-//         method: "POST",
-//         body: { content },
-//       }),
-//       async onQueryStarted({ postId, content }, { dispatch, queryFulfilled }) {
-//         // Optimistically update getPosts list
-//         const patchList = dispatch(
-//           apiSlice.util.updateQueryData("getPosts", undefined, (draft) => {
-//             const post = draft.find((p) => p._id === postId);
-//             if (post) post.comment.push({ _id: "temp", content });
-//           })
-//         );
-//         // Optimistically update getPostById
-//         const patchSingle = dispatch(
-//           apiSlice.util.updateQueryData("getPostById", postId, (draft) => {
-//             if (draft) draft.comment.push({ _id: "temp", content });
-//           })
-//         );
+// ---- PostItem component ----
+function PostItem({ post }) {
+  const { data: commentsData, isLoading, error } = useGetCommentsQuery(post._id);
+  const [addComment] = useAddCommentMutation();
+  const [addReply] = useAddReplyMutation();
+  const [deleteComment] = useDeleteCommentMutation();
+  const [deleteReply] = useDeleteReplyMutation();
 
-//         try {
-//           const { data } = await queryFulfilled;
-//           // Replace temp id with real comment id from backend
-//           patchList.undo(); // remove temp
-//           patchSingle.undo();
+  const [commentText, setCommentText] = useState("");
+  const [replyText, setReplyText] = useState({});
 
-//           dispatch(
-//             apiSlice.util.updateQueryData("getPosts", undefined, (draft) => {
-//               const post = draft.find((p) => p._id === postId);
-//               if (post) post.comment.push(data);
-//             })
-//           );
-//           dispatch(
-//             apiSlice.util.updateQueryData("getPostById", postId, (draft) => {
-//               if (draft) draft.comment.push(data);
-//             })
-//           );
-//         } catch {
-//           patchList.undo();
-//           patchSingle.undo();
-//         }
-//       },
-//       invalidatesTags: [{ type: "Comment", id: postId }],
-//     }),
-//     deleteComment: builder.mutation({
-//       query: ({ postId, commentId }) => ({
-//         url: `/posts/${postId}/comments/${commentId}`,
-//         method: "DELETE",
-//       }),
-//       invalidatesTags: [{ type: "Comment", id: postId }],
-//     }),
+  const comments = commentsData?.message || [];
 
-//     // ================= REPLIES =================
-//     addReply: builder.mutation({
-//       query: ({ postId, commentId, content }) => ({
-//         url: `/posts/${postId}/comments/${commentId}/reply`,
-//         method: "POST",
-//         body: { content },
-//       }),
-//       invalidatesTags: [{ type: "Comment", id: postId }],
-//     }),
-//     deleteReply: builder.mutation({
-//       query: ({ postId, commentId, replyId }) => ({
-//         url: `/posts/${postId}/comments/${commentId}/reply/${replyId}`,
-//         method: "DELETE",
-//       }),
-//       invalidatesTags: [{ type: "Comment", id: postId }],
-//     }),
+  const handleAddComment = async () => {
+    if (!commentText) return;
+    await addComment({ postId: post._id, body: { content: commentText } });
+    setCommentText("");
+  };
 
-//     // ================= LIKES =================
-//     addLike: builder.mutation({
-//       query: ({ postId }) => ({
-//         url: `/posts/${postId}/like`,
-//         method: "POST",
-//       }),
-//       async onQueryStarted({ postId }, { dispatch, queryFulfilled }) {
-//         const patchList = dispatch(
-//           apiSlice.util.updateQueryData("getPosts", undefined, (draft) => {
-//             const post = draft.find((p) => p._id === postId);
-//             if (post) post.like.push("temp");
-//           })
-//         );
-//         const patchSingle = dispatch(
-//           apiSlice.util.updateQueryData("getPostById", postId, (draft) => {
-//             if (draft) draft.like.push("temp");
-//           })
-//         );
-//         try {
-//           const { data } = await queryFulfilled;
-//           patchList.undo();
-//           patchSingle.undo();
-//           dispatch(
-//             apiSlice.util.updateQueryData("getPosts", undefined, (draft) => {
-//               const post = draft.find((p) => p._id === postId);
-//               if (post) post.like.push(data.userId);
-//             })
-//           );
-//           dispatch(
-//             apiSlice.util.updateQueryData("getPostById", postId, (draft) => {
-//               if (draft) draft.like.push(data.userId);
-//             })
-//           );
-//         } catch {
-//           patchList.undo();
-//           patchSingle.undo();
-//         }
-//       },
-//       invalidatesTags: [{ type: "Post", id: postId }],
-//     }),
-//     removeLike: builder.mutation({
-//       query: ({ postId }) => ({
-//         url: `/posts/${postId}/like`,
-//         method: "DELETE",
-//       }),
-//       invalidatesTags: [{ type: "Post", id: postId }],
-//     }),
-//   }),
-// });
+  const handleAddReply = async (commentId) => {
+    if (!replyText[commentId]) return;
+    await addReply({ commentId, postId: post._id, body: { content: replyText[commentId] } });
+    setReplyText({ ...replyText, [commentId]: "" });
+  };
 
-// // ================= EXPORT HOOKS =================
-// export const {
-//   useGetPostsQuery,
-//   useGetPostByIdQuery,
-//   useAddPostMutation,
-//   useDeletePostMutation,
-//   useGetCommentsQuery,
-//   useAddCommentMutation,
-//   useDeleteCommentMutation,
-//   useAddReplyMutation,
-//   useDeleteReplyMutation,
-//   useAddLikeMutation,
-//   useRemoveLikeMutation,
-// } = apiSlice;
+  return (
+    <div style={{ border: "1px solid gray", margin: "10px", padding: "10px" }}>
+      <h3>{post.title}</h3>
+      <p>{post.content}</p>
+      {post.img && <img src={post.img} alt="" style={{ maxWidth: "200px" }} />}
+      <p>Likes: {post.like?.length || 0}</p>
 
+      {/* Comments */}
+      <h4>Comments</h4>
+      <input
+        placeholder="Add comment..."
+        value={commentText}
+        onChange={(e) => setCommentText(e.target.value)}
+      />
+      <button onClick={handleAddComment}>Comment</button>
+
+      {isLoading && <p>Loading comments...</p>}
+      {error && <p>Error loading comments</p>}
+
+      {comments.map((c) => (
+        <div key={c._id} style={{ marginLeft: "20px", marginTop: "5px" }}>
+          <p>
+            <b>{c.author?.username}:</b> {c.content}
+          </p>
+          <button onClick={() => deleteComment({ commentId: c._id, postId: post._id })}>
+            Delete Comment
+          </button>
+
+          <input
+            placeholder="Reply..."
+            value={replyText[c._id] || ""}
+            onChange={(e) => setReplyText({ ...replyText, [c._id]: e.target.value })}
+          />
+          <button onClick={() => handleAddReply(c._id)}>Reply</button>
+
+          {c.reply?.map((r) => (
+            <div key={r._id} style={{ marginLeft: "20px" }}>
+              <p>
+                <b>{r.author?.username}:</b> {r.content}
+              </p>
+              <button onClick={() => deleteReply({ commentId: c._id, replyId: r._id })}>
+                Delete Reply
+              </button>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---- Main App ----
+function App() {
+  const { data: postsData, isLoading, error } = useGetPostsQuery();
+  const [addPost] = useAddPostMutation();
+  const [likePost] = useLikePostMutation();
+  const [deleteLike] = useDeleteLikeMutation();
+
+  const posts = postsData?.message || [];
+
+  const handleAddPost = async () => {
+    await addPost({
+      title: "Demo Post",
+      content: "Hello World",
+      img: "https://via.placeholder.com/300",
+    });
+  };
+
+  if (isLoading) return <p>Loading posts...</p>;
+  if (error) return <p>Error fetching posts</p>;
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h1>Posts Demo with Comments & Replies</h1>
+      <button onClick={handleAddPost}>Add Demo Post</button>
+
+      {posts.map((post) => (
+        <PostItem key={post._id} post={post} />
+      ))}
+    </div>
+  );
+}
+
+export default App;
