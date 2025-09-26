@@ -1,4 +1,5 @@
 import { api } from "../../app/apiSlice";
+import {setUser, clearUser} from "../auth/authSlicer"
 
 export const autApi = api.injectEndpoints({
     endpoints: (builder) => ({
@@ -8,7 +9,14 @@ export const autApi = api.injectEndpoints({
                 method: "POST",
                 body,
             }),
-            invalidatesTags: ["Auth"],
+            async onQueryStarted(arg, api){
+                try {
+                    const {data} = await api.queryFulfilled
+                    api.dispatch(setUser(data.user))
+                } catch (err) {
+                    console.log(err)
+                }
+            },
         }),
         login: builder.mutation({
             query: (body) => ({
@@ -16,14 +24,28 @@ export const autApi = api.injectEndpoints({
                 method: "POST",
                 body,
             }),
-            invalidatesTags: ["Auth"],
+            async onQueryStarted(arg, api){
+                try {
+                    const {data} = await api.queryFulfilled
+                    api.dispatch(setUser(data.user))
+                } catch (err) {
+                    console.log(err)
+                }
+            },
         }),
         logout: builder.mutation({
             query: () => ({
                 url:"/auth/logout",
                 method: "POST",
             }),
-            invalidatesTags: ["Auth"],
+            async onQueryStarted(arg, api){
+                try {
+                    await api.queryFulfilled
+                    api.dispatch(clearUser())
+                } catch (err) {
+                    console.log(err)
+                }
+            }
         }),
     })
 })
