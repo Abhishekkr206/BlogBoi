@@ -1,5 +1,5 @@
 import { FloatingDock } from "./floatingDock"
-import { Home, Search, Edit2, User, Bell } from "lucide-react"
+import { Home, Search, Edit2, User, Sun } from "lucide-react"
 
 export default function FloatingDockDemo() {
   const links = [
@@ -19,8 +19,8 @@ export default function FloatingDockDemo() {
       href: "#",
     },
     {
-      title: "Notification",
-      icon: <Bell className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      title: "Light",
+      icon: <Sun className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
       href: "#",
     },
     {
