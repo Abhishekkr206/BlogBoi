@@ -1,30 +1,22 @@
-import Home from "../pages/home"
+import {BrowserRouter, Routes, Route} from "react-router-dom"
 import Navbar from "../components/navbar"
-import PostCard from "../components/postCard"
 import BottomNavbar from "../components/bottomNav/bottomNavbar"
-import {LoaderOne as Spinner} from "../components/spinner"
-import CommentCard from "../components/comment"
-import LoginForm from "../components/auth/login"
-import SignupForm from "../components/auth/signup"
-import UserProfile from "../pages/user"
+import Home from "../pages/home"
 import PostSection from "../pages/post"
+import UserProfile from "../pages/user"
 import CreatePost from "../pages/createPost"
 
 export default function App(){
     return(
-        <>
+        <BrowserRouter>
             <Navbar/>
-            <CreatePost/>
-            <PostSection/>
-            {/* <UserProfile/>
+            <Routes>
+                <Route path="/" element={<Home/>} />
+                <Route path="/post" element={<PostSection/>} />
+                <Route path="/creat" element={<CreatePost/>} />
+                <Route path="/user" element={<UserProfile/>} />
+            </Routes>
             <BottomNavbar/>
-            <SignupForm/>
-            <LoginForm/>
-            <div className="h-[90vh] w-full flex justify-center items-center flex-col gap-2 ">
-                <PostCard/>
-                <PostCard/>
-                <CommentCard/>
-            </div> */}
-        </>
+        </BrowserRouter>
     )
 }

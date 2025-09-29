@@ -2,6 +2,7 @@ import { cn } from "../../lib/utils"
 import { IconLayoutNavbarCollapse } from "@tabler/icons-react"
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "motion/react"
 import { useRef, useState } from "react"
+import { Link } from "react-router-dom"
 
 export const FloatingDock = ({ items, desktopClassName, mobileClassName }) => {
   return (
@@ -97,7 +98,7 @@ function IconContainer({ mouseX, title, icon, href }) {
   const [hovered, setHovered] = useState(false)
 
   return (
-    <a href={href}>
+    <Link to={href}>
       <motion.div
         ref={ref}
         style={{ width, height }}
@@ -121,6 +122,6 @@ function IconContainer({ mouseX, title, icon, href }) {
           {icon}
         </motion.div>
       </motion.div>
-    </a>
+    </Link>
   )
 }

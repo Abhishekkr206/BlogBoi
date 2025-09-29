@@ -1,50 +1,48 @@
 import { useState } from "react";
+import { Bold, Italic, Underline } from "lucide-react";
 
-export default function CreatePostFull() {
+export default function CreatePost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // Function to render HTML tags in content
-  const renderContent = (text) => {
-    return { __html: text };
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-start p-8">
-      <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-lg flex flex-col gap-6">
-        <h1 className="text-4xl font-bold text-center">Create Post</h1>
-
+    <div className="min-h-screen bg-white/10 text-black px-8 py-5">
+      <div className="max-w-3xl mx-auto">
         {/* Title input */}
         <input
           type="text"
-          placeholder="Title"
+          placeholder="Title..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-6 py-4 border border-gray-300 rounded-md focus:outline-none focus:border-black text-2xl font-bold"
+          className="w-full text-5xl font-bold outline-none placeholder-gray-400 mb-6 bg-white border-1 border-black/20 p-3 rounded-xl"
         />
-
-        {/* Content textarea */}
+        
+        {/* Content editor */}
         <textarea
-          placeholder="Write your content here using <b>bold</b>, <i>italic</i>, <u>underline</u>"
+          placeholder="Tell your story..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          rows={15}
-          className="w-full px-6 py-4 border border-gray-300 rounded-md focus:outline-none focus:border-black resize-none text-lg"
+          className="w-full h-[62vh] text-xl leading-relaxed outline-none placeholder-gray-400 resize-none bg-white border-1 border-black/20 p-3 rounded-xl"
         />
 
-        {/* Live Preview */}
-        <div className="border-t border-gray-300 pt-4">
-          <h2 className="text-2xl font-semibold mb-2">Preview</h2>
-          <div
-            className="prose max-w-full text-gray-800"
-            dangerouslySetInnerHTML={renderContent(content)}
-          ></div>
+        {/* Formatting toolbar and Publish button */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button className="p-2 hover:bg-gray-200 rounded transition">
+              <Bold size={20} />
+            </button>
+            <button className="p-2 hover:bg-gray-200 rounded transition">
+              <Italic size={20} />
+            </button>
+            <button className="p-2 hover:bg-gray-200 rounded transition">
+              <Underline size={20} />
+            </button>
+          </div>
+          
+          <button className="px-6 py-2 bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition">
+            Publish
+          </button>
         </div>
-
-        {/* Post Button */}
-        <button className="px-8 py-4 bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition text-lg self-end">
-          Post
-        </button>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ export default function PostCard() {
     like: 89,
     title: "Evening Walk 🌆",
     content:
-      "Captured this beautiful sunset on my evening walk. Nature never disappoints! The colors were absolutely stunning and calming after The colors were absolutely stunning and calming after a long day. 🌅✨",
+      "Captured this beautiful sunset on my evening walk. Nature never disappoints!  The colors were absolutely stunning and calming after The colors were  The colors were absolutely stunning and calming after The colors were  The colors were absolutely stunning and calming after The colors were absolutely stunning and calming after a long day. 🌅✨",
     img: "https://picsum.photos/200/150?random=4",
     time: "1h ago",
   };
@@ -21,7 +21,7 @@ export default function PostCard() {
   };
 
   return (
-    <div className="flex border rounded-lg shadow-md p-3 gap-4 items-start max-w-2xl bg-white">
+    <div className="flex border rounded-lg shadow-md p-3 gap-4 items-center max-w-3xl min-h-[210px] bg-white">
       {/* left side: profile + content */}
       <div className="flex-1 flex flex-col gap-2">
         {/* user info */}
@@ -36,7 +36,7 @@ export default function PostCard() {
         {/* text content */}
         <div>
           <h2 className="font-bold text-lg">{title}</h2>
-          <p className="text-gray-700 text-sm">{truncate(content, 150)}</p>
+          <p className="text-gray-700 text-sm">{truncate(content, 200)}</p>
         </div>
 
         {/* like + comment */}
