@@ -20,18 +20,24 @@ router.post("/signup", async (req,res)=>{
 
         res.cookie("token", token,{
             httpOnly:true,
-            secure:FileSystemWritableFileStream,
+            secure:false,
             maxAge:24*60*60*1000,
             sameSite:"None",
             path:'/'
         })
         res.status(200).json({
-            message:"SignUp success"
+            message:"SignUp success",
+            user: {
+                _id: User._id,
+                username: User.username,
+                name: User.name,
+                email: User.email
+            }
         })
     }
     catch(err){
         res.status(400).json({
-            message:"Username exist"
+            message:err
         })
     }
 })

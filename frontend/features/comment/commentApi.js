@@ -4,7 +4,7 @@ export const commentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // ✅ Get comments for a post
     getComments: builder.query({
-      query: (postId) => `/comment/${postId}`,
+      query: (postId) => `blog/comment/${postId}`,
       providesTags: (result, error, postId) =>
         result?.message
           ? [
@@ -17,7 +17,7 @@ export const commentApi = api.injectEndpoints({
     // ✅ Add a comment to a post
     addComment: builder.mutation({
       query: ({ postId, body }) => ({
-        url: `/comment/${postId}`,
+        url: `blog/comment/${postId}`,
         method: "POST",
         body,
       }),
@@ -30,7 +30,7 @@ export const commentApi = api.injectEndpoints({
     // ✅ Add a reply to a comment
     addReply: builder.mutation({
       query: ({ commentId, body }) => ({
-        url: `/comment/${commentId}/reply`,
+        url: `blog/comment/${commentId}/reply`,
         method: "POST",
         body,
       }),
@@ -42,7 +42,7 @@ export const commentApi = api.injectEndpoints({
     // ✅ Delete a comment
     deleteComment: builder.mutation({
       query: ({ commentId }) => ({
-        url: `/comment/${commentId}`,
+        url: `blog/comment/${commentId}`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { postId }) => [
@@ -54,7 +54,7 @@ export const commentApi = api.injectEndpoints({
     // ✅ Delete a reply
     deleteReply: builder.mutation({
       query: ({ commentId, replyId }) => ({
-        url: `/comment/${commentId}/reply/${replyId}`,
+        url: `blog/comment/${commentId}/reply/${replyId}`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { commentId }) => [

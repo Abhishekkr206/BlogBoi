@@ -1,32 +1,35 @@
-export default function CommentCard() {
+export default function CommentCard({comments}) {
   // demo data
-  const data = {
-    profilePic: "https://randomuser.me/api/portraits/men/12.jpg",
-    username: "alex_09",
-    comment: "This is such a great post! Really enjoyed reading it 👏",
-    time: "30m ago",
-  };
+  const data = comments
+  // {
+  //   profilePic: "https://randomuser.me/api/portraits/men/12.jpg",
+  //   username: "alex_09",
+  //   comment: "This is such a great post! Really enjoyed reading it 👏",
+  //   time: "30m ago",
+  // };
 
-  const { profilePic, username, comment, time } = data;
+  const { author, content, createdAt } = data;
 
   return (
     <div className="flex flex-col border rounded-lg p-3 shadow-sm bg-white max-w-md">
       {/* top part - user info */}
       <div className="flex items-center gap-3">
         <img
-          src={profilePic}
-          alt={username}
+          src={author.profileimg}
+          alt={author.username}
           className="w-10 h-10 rounded-full"
         />
         <div>
-          <h4 className="font-semibold text-gray-800">{username}</h4>
-          <span className="text-xs text-gray-500">{time}</span>
-        </div>
+          <h4 className="font-semibold text-gray-800">{author.username}</h4>
+          <span className="text-xs text-gray-500">
+            {new Date(createdAt).toLocaleString()} {/* show readable date */}
+          </span>        
+          </div>
       </div>
 
       {/* comment text */}
       <div className="mt-2">
-        <h3 className="text-gray-700 text-sm">{comment}</h3>
+        <h3 className="text-gray-700 text-sm">{content}</h3>
       </div>
 
       {/* reply button */}

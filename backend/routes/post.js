@@ -44,8 +44,8 @@ router.get("/post", async (req, res) => {
   try {
     const blog = await Userpost.find()
       .populate({
-        path: "comment",       // comment array
-        populate: { path: "author", select: "username" } // author info bhi
+        path: "author",       // comment array
+        select:"username profilepic"    // author info bhi
       })
     res.status(200).json({
       message: blog,
@@ -61,7 +61,15 @@ router.get("/post", async (req, res) => {
 router.get("/post/:postid", async (req,res)=>{
     try{
         const postid = req.params.postid
-        const blog = await Userpost.findById(postid).populate("author","username profileimg")
+        const blog = await Userpost.findById(postid)
+            .populate("author","username profileimg")
+            .populate({
+                path:"comment",
+                populate:{
+                    path:"author",
+                    select:"username profileimg"
+                }
+            })
 
         if (!blog) {
             return res.status(404).json({ message: "Post not found" });
@@ -83,8 +91,31 @@ router.get("/user/:userid", async (req,res)=>{
     try {
         const userid = req.params.userid
         const userblog = await Userpost.find({author:userid})
+        const user = await User.findById({_id:userid})
+
+        const followers = user.follower || [];
+        const following = user.following || [];
+
+        const response = {
+            _id: user._id,
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            followerCount: user.follower.length,
+            followingCount: user.following.length,
+            blogs: userblog.map(blog => ({
+                _id: blog._id,
+                author:blog.author,
+                title: blog.title,
+                content: blog.content,
+                img: blog.img,
+                like: blog.like.length,
+                comment: blog.comment.length,
+                createdAt: blog.createdAt
+            }))
+        };
         res.status(200).json({
-            message:userblog
+            response
         })
     } 
     catch (err) {

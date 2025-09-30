@@ -15,5 +15,7 @@ const authSlicer = createSlice({
             state.user = null
         }
     }
-
 })
+
+export const {setUser, clearUser} = authSlicer.actions
+export default authSlicer.reducer;

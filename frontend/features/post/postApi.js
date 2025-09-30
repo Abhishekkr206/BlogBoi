@@ -3,7 +3,7 @@ import { api } from "../../app/apiSlice";
 export const postApi = api.injectEndpoints({
     endpoints: (builder) => ({
         getPosts: builder.query({
-          query: () => "/post",
+          query: () => "blog/post",
           providesTags: (result) =>
             result?.message
               ? [
@@ -13,7 +13,7 @@ export const postApi = api.injectEndpoints({
               : [{ type: "Post", id: "LIST" }],
         }),
         getPostById: builder.query({
-            query: (postid) => `/post/${postid}`,
+            query: (postid) => `blog/post/${postid}`,
             providesTags: (result, error, postid) => [{type:"Post", id: postid}],
         }),
         addPost: builder.mutation({
@@ -26,7 +26,7 @@ export const postApi = api.injectEndpoints({
         }),
         likePost: builder.mutation({
             query: (postid) => ({
-                url:`/post/${postid}/like`,
+                url:`blog/post/${postid}/like`,
                 method:"POST",
             }),
         invalidatesTags: (result, error, postid) => [
@@ -35,7 +35,7 @@ export const postApi = api.injectEndpoints({
         }),
         deleteLike: builder.mutation({
           query: (postid) => ({
-            url: `/post/${postid}/unlike`,
+            url: `blog/post/${postid}/unlike`,
             method: "DELETE",
           }),
           invalidatesTags: (result, error, postid) => [
@@ -44,7 +44,7 @@ export const postApi = api.injectEndpoints({
         }),
         deletePost: builder.mutation({
             query: (postid) =>({
-                url:`/post/${postid}`,
+                url:`blog/post/${postid}`,
                 method:"DELETE",
             }),
             invalidatesTags:[{type:"Post", id:"LIST"}],
