@@ -18,7 +18,7 @@ export const postApi = api.injectEndpoints({
         }),
         addPost: builder.mutation({
             query: (body)=>({
-                url:"/post",
+                url:"blog/post",
                 method:"POST",
                 body,
             }),

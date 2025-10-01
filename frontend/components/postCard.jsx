@@ -35,7 +35,7 @@ export default function PostCard({data}) {
   return (
     <>
         <div 
-          className="flex border rounded-lg shadow-md p-3 gap-4 items-center max-w-3xl min-w-3xl min-h-[210px] bg-white z-10"
+          className="flex border rounded-lg shadow-md p-3 gap-4 items-center max-w-3xl min-w-3xl min-h-[210px] bg-white z-10 cursor-pointer"
           onClick={()=> navigate(`/post/${_id}`)}
           >
           <div className="flex-1 flex flex-col gap-2">
