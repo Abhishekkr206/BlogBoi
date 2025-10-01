@@ -7,6 +7,7 @@ import PostSection from "../pages/post"
 import UserProfile from "../pages/user"
 import CreatePost from "../pages/createPost"
 import SignupForm from "../components/auth/signup"
+import LoginForm from "../components/auth/login"
 import { useDispatch } from "react-redux"
 import { setUser } from "../features/auth/authSlicer"
 
@@ -29,6 +30,7 @@ export default function App(){
                 <Route path="/creat" element={<CreatePost/>} />
                 <Route path="/user/:userid" element={<UserProfile/>} />
                 <Route path="/register/details" element={<SignupForm/>} />
+                <Route path="/login" element={<LoginForm/>} />
             </Routes>
             <BottomNavbar/>
         </BrowserRouter>

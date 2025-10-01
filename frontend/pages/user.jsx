@@ -3,6 +3,7 @@ import { useGetUserDataQuery } from "../features/user/userApi";
 import { useParams } from "react-router-dom";
 import {LoaderOne as Spinner} from "../components/spinner"
 import PostCard from "../components/postCard"
+import LogoutButton from "../components/auth/logout";
 
 export default function UserProfile() {
 
@@ -49,6 +50,7 @@ export default function UserProfile() {
         <button className="px-4 py-1 bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition">
           Follow
         </button>
+        <LogoutButton/>
       </div>
 
       {/* Posts Section */}

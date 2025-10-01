@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bold, Italic, Underline } from "lucide-react";
+import { useAddPostMutation } from "../features/post/postApi";
 
 export default function CreatePost() {
   const [title, setTitle] = useState("");

@@ -4,6 +4,13 @@ import { useSelector } from "react-redux";
 
 export default function FloatingDockDemo() {
   const userid = useSelector((state)=> state.auth.user?._id)
+  let userRoute
+  if(userid == undefined){
+    userRoute = "/login"
+  }
+  else{
+    userRoute = `/user/${userid}`
+  }
   console.log(userid)
 
   const links = [
@@ -30,7 +37,7 @@ export default function FloatingDockDemo() {
     {
       title: "User",
       icon: <User className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
-      href: `/user/${userid}`,
+      href: userRoute,
     },
   ];
   return (

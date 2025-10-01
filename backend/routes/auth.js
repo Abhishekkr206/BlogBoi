@@ -22,7 +22,7 @@ router.post("/signup", async (req,res)=>{
             httpOnly:true,
             secure:false,
             maxAge:24*60*60*1000,
-            sameSite:"None",
+            sameSite:"Lax",
             path:'/'
         })
         res.status(200).json({
@@ -63,11 +63,17 @@ router.post("/login", async (req,res)=>{
             httpOnly:true,
             secure:false,
             maxAge:24*60*60*1000,
-            sameSite:"None",
+            sameSite:"Lax",
             path:'/'
         })
         res.status(200).json({
-            message:"Login success"
+            message:"Login success",
+            user: {
+                _id: identifyuser._id,
+                username: identifyuser.username,
+                name: identifyuser.name,
+                email: identifyuser.email
+            }
         })
 
     }
