@@ -48,7 +48,7 @@ export default function CreatePost() {
   return (
     <div className="min-h-screen bg-white/10 text-black px-8 py-5">
       <form onSubmit={handleSubmit}>
-        <input type="file" accept="image/*" onChange={handleChanges} />
+        <input type="file" accept="image/*" value={postData.img} onChange={handleChanges} />
         <div className="max-w-3xl mx-auto">
           {/* Title input */}
           <input

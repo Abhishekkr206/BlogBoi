@@ -1,5 +1,5 @@
 const express = require("express")
-const Auth = require("../middleware/authMiddleware")
+const {Auth, optionalAuth} = require("../middleware/authMiddleware")
 const User = require("../models/user")
 const Userpost = require("../models/post")
 const Comment = require("../models/comment")
@@ -40,15 +40,31 @@ router.post("/post", Auth, upload.single("img"), async (req,res)=>{
 })
 
 //for the front page
-router.get("/post", async (req, res) => {
+router.get("/post",optionalAuth, async (req, res) => {
   try {
     const blog = await Userpost.find()
       .populate({
-        path: "author",       // comment array
-        select:"username profilepic"    // author info bhi
-      })
+        path: "author",
+        select: "username profilepic"
+      });
+
+    const currentUserId = req.user?.id?.toString();
+
+    const blogs = blog.map(post => ({
+      _id: post._id,
+      author: post.author,
+      title: post.title,
+      content: post.content,
+      img: post.img,
+      like: post.like,
+      isliked: currentUserId ? post.like.map(id => id.toString()).includes(currentUserId) : false,
+      comment: post.comment.length,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt
+    }));
+
     res.status(200).json({
-      message: blog,
+      message: blogs
     });
   } catch (err) {
     res.status(500).json({
@@ -58,24 +74,32 @@ router.get("/post", async (req, res) => {
 });
 
 //for the specific post to see the full blog and comments
-router.get("/post/:postid", async (req,res)=>{
+router.get("/post/:postid",optionalAuth, async (req,res)=>{
     try{
         const postid = req.params.postid
+        const currentUserId = req.user?.id?.toString();
+
         const blog = await Userpost.findById(postid)
             .populate("author","username profileimg")
-            .populate({
-                path:"comment",
-                populate:{
-                    path:"author",
-                    select:"username profileimg"
-                }
-            })
 
         if (!blog) {
             return res.status(404).json({ message: "Post not found" });
         }
+
+        const userBlogs = {
+          _id: blog._id,
+          author: blog.author,
+          title: blog.title,
+          content: blog.content,
+          img: blog.img,
+          like: blog.like,
+          isliked: currentUserId ? blog.like.map(id => id.toString()).includes(currentUserId) : false,
+          comment: blog.comment,
+          createdAt: blog.createdAt,
+          updatedAt: blog.updatedAt
+        };
         res.status(200).json({
-            message:blog
+            message:userBlogs
         })
     }
     catch(err){
@@ -87,7 +111,7 @@ router.get("/post/:postid", async (req,res)=>{
 
 //more work required here because we don't only need the posts we need all the things like name username post follower following like
 //for the user profile
-router.get("/user/:userid", async (req,res)=>{
+router.get("/user/:userid",optionalAuth, async (req,res)=>{
     try {
         const userid = req.params.userid
         const userblog = await Userpost.find({author:userid})
@@ -109,7 +133,8 @@ router.get("/user/:userid", async (req,res)=>{
                 title: blog.title,
                 content: blog.content,
                 img: blog.img,
-                like: blog.like.length,
+                like: blog.like,
+                isliked: blog.like.map(id => id.toString()).includes(req.user?.id),
                 comment: blog.comment.length,
                 createdAt: blog.createdAt
             }))
@@ -126,11 +151,11 @@ router.get("/user/:userid", async (req,res)=>{
 })
 
 //comments
-router.post("/comment/:postid", async (req,res)=>{
+router.post("/comment/:postid", Auth, async (req,res)=>{
     try {
-        const {content} = req.body
         const post = req.params.postid
         const author = req.user.id
+        const {content} = req.body
         const newComment =  new Comment({
             post,
             author,

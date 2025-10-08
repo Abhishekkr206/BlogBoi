@@ -1,24 +1,49 @@
 import { Heart, MessageCircle } from "lucide-react";
+import {IconHeartFilled} from "@tabler/icons-react"
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useLikePostMutation, useDeleteLikeMutation} from "../features/post/postApi";
+import { useState } from "react";
 
 export default function PostCard({data}) {
-  // const data = {
-  //   profilePic: "https://randomuser.me/api/portraits/women/45.jpg",
-  //   username: "sarah_01",
-  //   like: 89,
-  //   title: "Evening Walk 🌆",
-  //   content:
-  //     "Captured this beautiful sunset on my evening walk. Nature never disappoints!  The colors were absolutely stunning and calming after The colors were  The colors were absolutely stunning and calming after The colors were  The colors were absolutely stunning and calming after The colors were absolutely stunning and calming after a long day. 🌅✨",
-  //   img: "https://picsum.photos/200/150?random=4",
-  //   time: "1h ago",
-  // };
 
   const navigate = useNavigate()
-  const {_id, author, like, title, content, createdAt } = data;
+  const {_id, author, like, isliked, title, content,comment, createdAt } = data;
+  console.log("ye dekh: ", isliked)
+
+  const [likePost] = useLikePostMutation()
+  const [deleteLike] = useDeleteLikeMutation()
+  
+  const [totalLikes, setTotalLikes] = useState(like.length)
+  const [liked, setLiked] = useState(isliked);
+
+  const handleSubmit = async (e)=>{
+    e.preventDefault()
+    e.stopPropagation();
+    try{
+      const postid = _id
+      if (!liked) {
+        setTotalLikes(prev => prev + 1);
+        setLiked(true);
+
+        likePost(postid)
+      } else {
+        setTotalLikes(prev => prev - 1);
+        setLiked(false);
+
+        deleteLike(postid)
+      }
+      // Reset 
+    }
+    catch(err){
+      console.log(err)
+    }
+  } 
+  
   
   let {img} = data
   if(img == "") img = null
+
 
   // limit function
   const truncate = (text, limit) => {
@@ -58,11 +83,14 @@ export default function PostCard({data}) {
             </div>
               
             <div className="flex items-center gap-4 pt-2">
+              <button className="flex items-center gap-1 cursor-pointer" onClick={handleSubmit}>
+                {liked?<IconHeartFilled  className="w-5 h-5 text-red-500 " /> :<Heart className="w-5 h-5 text-red-500 " />}
+                <span>{totalLikes}</span>
+              </button>
               <div className="flex items-center gap-1">
-                <Heart className="w-5 h-5 text-red-500" />
-                <span>{like}</span>
+                <MessageCircle className="w-5 h-5 text-gray-600" />
+                <span>{comment}</span>
               </div>
-              <MessageCircle className="w-5 h-5 text-gray-600" />
             </div>
           </div>
               
