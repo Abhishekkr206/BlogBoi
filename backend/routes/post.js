@@ -75,38 +75,41 @@ router.get("/post",optionalAuth, async (req, res) => {
 });
 
 //for the specific post to see the full blog and comments
-router.get("/post/:postid",optionalAuth, async (req,res)=>{
-    try{
+router.get("/post/:postid", optionalAuth, async (req, res) => {
+    try {
         const postid = req.params.postid
         const currentUserId = req.user?.id?.toString();
 
         const blog = await Userpost.findById(postid)
-            .populate("author","username profileimg")
+            .populate("author", "username profileimg follower") // ADD follower here!
 
         if (!blog) {
             return res.status(404).json({ message: "Post not found" });
         }
+        
+        const followers = blog.author.follower || []
 
         const userBlogs = {
-          _id: blog._id,
-          author: blog.author,
-          title: blog.title,
-          content: blog.content,
-          img: blog.img,
-          like: blog.like,
-          isfollowing: req.user ? followers.map(id => id.toString()).includes(req.user.id) : false,
-          isliked: currentUserId ? blog.like.map(id => id.toString()).includes(currentUserId) : false,
-          comment: blog.comment,
-          createdAt: blog.createdAt,
-          updatedAt: blog.updatedAt
+            _id: blog._id,
+            author: blog.author,
+            title: blog.title,
+            content: blog.content,
+            img: blog.img,
+            like: blog.like,
+            isfollowing: req.user ? followers.map(id => id.toString()).includes(req.user.id) : false,
+            isliked: currentUserId ? blog.like.map(id => id.toString()).includes(currentUserId) : false,
+            comment: blog.comment,
+            createdAt: blog.createdAt,
+            updatedAt: blog.updatedAt
         };
+        
         res.status(200).json({
-            message:userBlogs
+            message: userBlogs
         })
     }
-    catch(err){
+    catch (err) {
         res.status(500).json({
-            message:err.message
+            message: err.message
         })
     }
 })
