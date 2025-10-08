@@ -26,12 +26,12 @@ export default function PostCard({data}) {
         setTotalLikes(prev => prev + 1);
         setLiked(true);
 
-        likePost(postid)
+        await likePost(postid).unwrap()
       } else {
         setTotalLikes(prev => prev - 1);
         setLiked(false);
 
-        deleteLike(postid)
+        await deleteLike(postid).unwrap()
       }
       // Reset 
     }

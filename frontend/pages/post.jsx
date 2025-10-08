@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Heart, Share2, UserPlus } from "lucide-react";
+import {IconHeartFilled} from "@tabler/icons-react"
 import {LoaderOne as Spinner} from "../components/spinner"
 import CommentCard from "../components/comment";
 import { useGetPostByIdQuery } from "../features/post/postApi";
-import { useGetCommentsQuery, useAddCommentMutation } from "../features/comment/commentApi";
 import { Link, useParams } from "react-router-dom";
+import { useGetCommentsQuery, useAddCommentMutation } from "../features/comment/commentApi";
+import { useLikePostMutation, useDeleteLikeMutation} from "../features/post/postApi";
+import {useFollowUserMutation, useUnfollowUserMutation} from "../features/user/userApi"
 
 export default function PostSection() {
 

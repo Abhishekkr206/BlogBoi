@@ -58,6 +58,7 @@ router.get("/post",optionalAuth, async (req, res) => {
       img: post.img,
       like: post.like,
       isliked: currentUserId ? post.like.map(id => id.toString()).includes(currentUserId) : false,
+      
       comment: post.comment.length,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt
@@ -93,6 +94,7 @@ router.get("/post/:postid",optionalAuth, async (req,res)=>{
           content: blog.content,
           img: blog.img,
           like: blog.like,
+          isfollowing: req.user ? followers.map(id => id.toString()).includes(req.user.id) : false,
           isliked: currentUserId ? blog.like.map(id => id.toString()).includes(currentUserId) : false,
           comment: blog.comment,
           createdAt: blog.createdAt,
@@ -127,6 +129,7 @@ router.get("/user/:userid",optionalAuth, async (req,res)=>{
             email: user.email,
             followerCount: user.follower.length,
             followingCount: user.following.length,
+            isfollowing: req.user ? followers.map(id => id.toString()).includes(req.user.id) : false,
             blogs: userblog.map(blog => ({
                 _id: blog._id,
                 author:blog.author,
