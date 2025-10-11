@@ -129,20 +129,27 @@ router.get("/user/:userid",optionalAuth, async (req,res)=>{
             _id: user._id,
             username: user.username,
             name: user.name,
+            profileimg: user.profileimg,
             email: user.email,
+            followers: followers,
+            following: following,
             followerCount: user.follower.length,
             followingCount: user.following.length,
             isfollowing: req.user ? followers.map(id => id.toString()).includes(req.user.id) : false,
             blogs: userblog.map(blog => ({
                 _id: blog._id,
-                author:blog.author,
-                title: blog.title,
+                author: {
+                     _id: user._id,
+                     username: user.username,
+                     profileimg: user.profileimg
+                 },                title: blog.title,
                 content: blog.content,
                 img: blog.img,
                 like: blog.like,
                 isliked: blog.like.map(id => id.toString()).includes(req.user?.id),
                 comment: blog.comment.length,
-                createdAt: blog.createdAt
+                createdAt: blog.createdAt,
+                profileSection:true,
             }))
         };
         res.status(200).json({
@@ -262,13 +269,26 @@ router.post("/user/:userid/follow", Auth, async (req,res)=>{
 })
 
 //not using this route but just keeping it for testing
-router.get("/user/:userid/following", async (req,res)=>{
+router.get("/user/:userid/following", optionalAuth, async (req,res)=>{
     try {
         const findFollowing = req.params.userid
-        const userFollowing = await User.findById(findFollowing).populate("following", "username profileimg")
+        const userFollowing = await User.findById(findFollowing).populate("following", "username name profileimg")
+
+        let myFollowingList = []
+        if (req.user) {
+            const currentUser = await User.findById(req.user.id).select("following")
+            myFollowingList = currentUser.following.map(id => id.toString())
+        }
+        const following = userFollowing.following.map(f => ({
+            _id: f._id,
+            username: f.username,
+            name: f.name,
+            profileimg: f.profileimg,
+            isfollowing: myFollowingList.includes(f._id.toString()),
+        }))
 
         res.status(200).json({
-            message:userFollowing.following
+            message: following
         })
     }
     catch (err) {
@@ -277,13 +297,27 @@ router.get("/user/:userid/following", async (req,res)=>{
         })   
     }
 })
-router.get("/user/:userid/follower", async (req,res)=>{
+router.get("/user/:userid/follower", optionalAuth, async (req,res)=>{
     try {
         const findFollower = req.params.userid
-         const userFollower = await User.findById(findFollower).populate("follower", "username profileimg")
+        const userFollower = await User.findById(findFollower).populate("follower", "username name profileimg")
+
+        let myFollowingList = []
+        if (req.user) {
+            const currentUser = await User.findById(req.user.id).select("following")
+            myFollowingList = currentUser.following.map(id => id.toString())
+        }
+
+        const followers = userFollower.follower.map(f => ({
+          _id: f._id,
+          username: f.username,
+          name: f.name,
+          profileimg: f.profileimg,
+          isfollowing: myFollowingList.includes(f._id.toString()),
+         }))
 
         res.status(200).json({
-            message:userFollower.follower
+            message:followers
         })
     }
     catch (err) {

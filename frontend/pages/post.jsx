@@ -93,6 +93,7 @@ export default function PostSection() {
 
     try {
       const res = await addComment({
+        authorId,
         postId: formData.postid,
         body: { content: formData.content },
       }).unwrap();
@@ -107,11 +108,11 @@ export default function PostSection() {
   const handleLike = async () => {
     try {
       if (liked) {
-        await deleteLike(postid).unwrap();
+        await deleteLike({authorId, postid}).unwrap();
         setLiked(false);
         setTotalLikes((prev) => prev - 1);
       } else {
-        await likePost(postid).unwrap();
+        await likePost({authorId, postid}).unwrap();
         setLiked(true);
         setTotalLikes((prev) => prev + 1);
       }

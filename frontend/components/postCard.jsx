@@ -1,18 +1,36 @@
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Trash2 } from "lucide-react";
 import {IconHeartFilled} from "@tabler/icons-react"
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useLikePostMutation, useDeleteLikeMutation} from "../features/post/postApi";
+import { useSelector } from "react-redux";
+import { useLikePostMutation, useDeleteLikeMutation, useDeletePostMutation} from "../features/post/postApi";
 import { useState } from "react";
 
 export default function PostCard({data}) {
 
   const navigate = useNavigate()
   const {_id, author, like, isliked, title, content,comment, createdAt } = data;
-  console.log("ye dekh: ", isliked)
+  
+  const currentUserId = useSelector((state) => state.auth.user?._id);
+  const isProfileSection = data?.profileSection || false;
+  
+  const authorId = author?._id;
+  const isAuthor = currentUserId === authorId;
+
+  // 🔍 DEBUG - Remove these after fixing
+  console.log("=== POST CARD DEBUG ===");
+  console.log("Full data:", data);
+  console.log("Current User ID:", currentUserId);
+  console.log("Author object:", author);
+  console.log("Author ID:", authorId);
+  console.log("isProfileSection:", isProfileSection);
+  console.log("isAuthor:", isAuthor);
+  console.log("Should show delete?", isProfileSection && isAuthor);
+  console.log("======================");
 
   const [likePost] = useLikePostMutation()
   const [deleteLike] = useDeleteLikeMutation()
+  const [deletePost] = useDeletePostMutation()
   
   const [totalLikes, setTotalLikes] = useState(like.length)
   const [liked, setLiked] = useState(isliked);
@@ -26,14 +44,13 @@ export default function PostCard({data}) {
         setTotalLikes(prev => prev + 1);
         setLiked(true);
 
-        await likePost(postid).unwrap()
+        await likePost({authorId, postid}).unwrap()
       } else {
         setTotalLikes(prev => prev - 1);
         setLiked(false);
 
-        await deleteLike(postid).unwrap()
+        await deleteLike({authorId, postid}).unwrap()
       }
-      // Reset 
     }
     catch(err){
       console.log(err)
@@ -56,15 +73,38 @@ export default function PostCard({data}) {
     navigate(`/user/${author._id}`)
   }
 
-  console.log(data)
+  const deletePostHandler = async (e)=>{
+    e.stopPropagation();
+    console.log("🗑️ Delete button clicked!");
+    try{
+      await deletePost({authorId, postid:_id}).unwrap()
+      console.log("✅ Post deleted successfully");
+    }
+    catch(err){
+      console.log("❌ Delete error:", err)
+    }
+  }
+
   return (
     <>
         <div 
-          className="flex border rounded-lg shadow-md p-3 gap-4 items-center max-w-3xl min-w-3xl min-h-[210px] bg-white z-10 cursor-pointer"
+          className="relative flex border rounded-lg shadow-md p-3 gap-4 items-center max-w-3xl min-w-3xl min-h-[210px] bg-white z-10 cursor-pointer"
           onClick={()=> navigate(`/post/${_id}`)}
           >
+          
+          {/* Delete Button - Show only if in profile section AND user is the author */}
+          {isProfileSection && isAuthor && (
+            <button
+              onClick={deletePostHandler}
+              className="absolute top-0.5 right-3 p-2 rounded-full text-gray-400 hover:text-black transition-colors duration-200 z-50"
+              aria-label="Delete post"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
+
           <div className="flex-1 flex flex-col gap-2">
-            <div className="flex justify-between items-center ">
+            <div className="flex justify-between items-center">
               <div 
                 className="flex items-center gap-2 hover:underline cursor-pointer"
                 onClick={handleRedirect}

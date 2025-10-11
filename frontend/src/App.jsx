@@ -8,6 +8,8 @@ import UserProfile from "../pages/user"
 import CreatePost from "../pages/createPost"
 import SignupForm from "../components/auth/signup"
 import LoginForm from "../components/auth/login"
+import FollowingPage from "../pages/following"
+import FollowerPage from "../pages/follower"
 import { useDispatch } from "react-redux"
 import { setUser } from "../features/auth/authSlicer"
 
@@ -31,6 +33,8 @@ export default function App(){
                 <Route path="/user/:userid" element={<UserProfile/>} />
                 <Route path="/register/details" element={<SignupForm/>} />
                 <Route path="/login" element={<LoginForm/>} />
+                <Route path="/user/:userid/following" element={<FollowingPage/>} />
+                <Route path="/user/:userid/follower" element={<FollowerPage/>} />
             </Routes>
             <BottomNavbar/>
         </BrowserRouter>

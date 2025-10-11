@@ -7,6 +7,16 @@ export const userApi = api.injectEndpoints({
       providesTags: (result, error, userid) => [{ type: "User", id: userid }],
     }),
 
+    getFollowingData: builder.query({
+      query: (userid) => `blog/user/${userid}/following`,
+      providesTags: (result, error, userid) => [{ type: "Follow", id: userid }],
+    }),
+
+    getFollowerData: builder.query({
+      query: (userid) => `blog/user/${userid}/follower`,
+      providesTags: (result, error, userid) => [{ type: "Follow", id: userid }],
+    }),
+
     followUser: builder.mutation({
       query: ({ userid, currentUserId }) => ({
         url: `blog/user/${userid}/follow`,
@@ -15,6 +25,7 @@ export const userApi = api.injectEndpoints({
       invalidatesTags: (result, error, { userid, currentUserId }) => [
         { type: "User", id: userid },
         { type: "User", id: currentUserId },
+        { type: "Follow", id: userid },
       ],
     }),
 
@@ -26,6 +37,7 @@ export const userApi = api.injectEndpoints({
       invalidatesTags: (result, error, { userid, currentUserId }) => [
         { type: "User", id: userid },
         { type: "User", id: currentUserId },
+        { type: "Follow", id: userid },
       ],
     }),
   }),
@@ -33,6 +45,8 @@ export const userApi = api.injectEndpoints({
 
 export const {
   useGetUserDataQuery,
+  useGetFollowingDataQuery,
+  useGetFollowerDataQuery,
   useFollowUserMutation,
   useUnfollowUserMutation,
 } = userApi;

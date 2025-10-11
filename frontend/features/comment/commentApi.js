@@ -16,17 +16,32 @@ export const commentApi = api.injectEndpoints({
 
     // ✅ Add a comment to a post
     addComment: builder.mutation({
-      query: ({ postId, body }) => ({
+      query: ({authorId, postId, body }) => ({
         url: `blog/comment/${postId}`,
         method: "POST",
         body,
       }),
-      invalidatesTags: (result, error, { postId }) => [
+      invalidatesTags: (result, error, { postId, authorId }) => {
+        return [
         { type: "Comment", id: `LIST-${postId}` },
         { type: "Post", id: postId },
-      ],
+        {type: "User", id: authorId},
+      ]}
     }),
 
+    // ✅ Delete a comment
+    deleteComment: builder.mutation({
+      query: ({authorId, postId, commentId }) => ({
+        url: `blog/comment/${commentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, { commentId, postId, authorId }) => {
+        return [
+        { type: "Comment", id: commentId },
+        { type: "Post", id: postId },
+        {type: "User", id: authorId},
+      ]}
+    }),
     // ✅ Add a reply to a comment
     addReply: builder.mutation({
       query: ({ commentId, body }) => ({
@@ -39,17 +54,6 @@ export const commentApi = api.injectEndpoints({
       ],
     }),
 
-    // ✅ Delete a comment
-    deleteComment: builder.mutation({
-      query: ({ commentId }) => ({
-        url: `blog/comment/${commentId}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: (result, error, { postId }) => [
-        { type: "Comment", id: `LIST-${postId}` },
-        { type: "Post", id: postId },
-      ],
-    }),
 
     // ✅ Delete a reply
     deleteReply: builder.mutation({

@@ -7,6 +7,7 @@ import {LoaderOne as Spinner} from "../components/spinner"
 import PostCard from "../components/postCard"
 import LogoutButton from "../components/auth/logout";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export default function UserProfile() {
 
@@ -17,6 +18,7 @@ export default function UserProfile() {
   const [isfollowingState, setIsfollowingState] = useState(false);
   const [followerCountState, setFollowerCountState] = useState(0);
   
+  const navigate = useNavigate()
   const currentUserId  = useSelector((state) => state.auth.user?._id)
   console.log("Current User ID:", currentUserId);
   // Move useEffect BEFORE the conditional return
@@ -35,7 +37,10 @@ export default function UserProfile() {
   const user = data?.response
   const {_id, username, name, profileimg, followingCount, isfollowing } = user
 
+const userdata = user
 
+
+console.log("Mitter Data:", userdata);
 
   const handleFollow = async () => {
     try {
@@ -52,6 +57,12 @@ export default function UserProfile() {
     catch (err) {
       console.error("Follow/Unfollow failed:", err);
     }
+  }
+  const showfollowers = ()=>{
+    navigate(`/user/${userid}/follower`)
+  }
+  const showfollowing = ()=>{
+    navigate(`/user/${userid}/following`)
   }
 
   return (
@@ -72,10 +83,10 @@ export default function UserProfile() {
                 <h3 className="text-md">{name} boi</h3>
               </div>
               <div className="flex gap-4 text-gray-700 text-md ">
-                <div className="hover:underline">
+                <div className="hover:underline cursor-pointer" onClick={showfollowers}>
                   <span className="font-semibold">{followerCountState}</span> Followers
                 </div>
-                <div className="hover:underline">
+                <div className="hover:underline cursor-pointer" onClick={showfollowing}> 
                   <span className="font-semibold">{followingCount}</span> Following
                 </div>
               </div>

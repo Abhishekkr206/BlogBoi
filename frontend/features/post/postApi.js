@@ -12,10 +12,19 @@ export const postApi = api.injectEndpoints({
                 ]
               : [{ type: "Post", id: "LIST" }],
         }),
+        
         getPostById: builder.query({
             query: (postid) => `blog/post/${postid}`,
-            providesTags: (result, error, postid) => [{type:"Post", id: postid}],
+            providesTags: (result, error, postid) => {
+                const authorId = result?.message?.author?._id;
+                
+                return [
+                    {type: "Post", id: postid},
+                    {type: "User", id: authorId}
+                ];
+            },
         }),
+        
         addPost: builder.mutation({
             query: (body)=>({
                 url:"blog/post",
@@ -24,30 +33,39 @@ export const postApi = api.injectEndpoints({
             }),
             invalidatesTags:[{type:"Post", id:"LIST"}],
         }),
+        
         likePost: builder.mutation({
-            query: (postid) => ({
+            query: ({authorId, postid}) => ({
                 url:`blog/post/${postid}/like`,
                 method:"POST",
             }),
-        invalidatesTags: (result, error, postid) => [
-            { type: "Post", id: postid },
-        ],
+            invalidatesTags: (result, error, { postid, authorId }) => [
+                { type: "Post", id: postid }, 
+                { type: "User", id: authorId },
+            ]
         }),
+        
         deleteLike: builder.mutation({
-          query: (postid) => ({
+          query: ({authorId, postid}) => ({
             url: `blog/post/${postid}/unlike`,
             method: "DELETE",
           }),
-          invalidatesTags: (result, error, postid) => [
-            { type: "Post", id: postid },
-          ],
+          invalidatesTags: (result, error, { postid, authorId }) => [
+              { type: "Post", id: postid },
+              { type: "User", id: authorId },
+          ]
         }),
+        
         deletePost: builder.mutation({
-            query: (postid) =>({
+            query: ({authorId, postid}) =>({
                 url:`blog/post/${postid}`,
                 method:"DELETE",
             }),
-            invalidatesTags:[{type:"Post", id:"LIST"}],
+            invalidatesTags: (result, error, { postid, authorId }) => [
+                { type: "Post", id: postid }, 
+                { type: "Post", id: "LIST" },
+                { type: "User", id: authorId },
+            ]
         })
     })
 })
@@ -59,4 +77,4 @@ export const {
   useLikePostMutation,
   useDeleteLikeMutation,
   useDeletePostMutation,
-} = postApi;
+} = postApi
