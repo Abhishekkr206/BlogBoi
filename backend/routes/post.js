@@ -294,6 +294,7 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
       _id: user._id,
       username: user.username,
       name: user.name,
+      bio:user.boi,
       profileimg: user.profileimg,
       email: user.email,
       followers: followers,
@@ -321,6 +322,33 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
 
     res.status(200).json({ response })
   } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// Edit user profile
+router.patch("/user/:userid/edit", Auth, upload.single("profileimg"), async (req, res) => {
+  try{
+    const userid = req.params.userid
+    const { name, bio } = req.body
+
+    let imgUrl = ""
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: "blogBoi" })
+      fs.unlinkSync(req.file.path)
+      imgUrl = result.secure_url
+    }
+    const updatedData = {}
+    if (name) updatedData.name = name
+    if (bio) updatedData.boi = bio
+    if (imgUrl) updatedData.imgUrl = profileimg
+
+    const updatedUser = await User.findByIdAndUpdate(userid, updatedData, { new: true })
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+  }catch(err){
     res.status(500).json({ message: err.message })
   }
 })

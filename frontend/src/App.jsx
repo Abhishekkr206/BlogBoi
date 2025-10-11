@@ -5,6 +5,7 @@ import BottomNavbar from "../components/bottomNav/bottomNavbar"
 import Home from "../pages/home"
 import PostSection from "../pages/post"
 import UserProfile from "../pages/user"
+import ProfileEdit from "../pages/profileEdit"
 import CreatePost from "../pages/createPost"
 import SignupForm from "../components/auth/signup"
 import LoginForm from "../components/auth/login"
@@ -35,6 +36,7 @@ export default function App(){
                 <Route path="/login" element={<LoginForm/>} />
                 <Route path="/user/:userid/following" element={<FollowingPage/>} />
                 <Route path="/user/:userid/follower" element={<FollowerPage/>} />
+                <Route path="/user/edit" element={<ProfileEdit/>} />
             </Routes>
             <BottomNavbar/>
         </BrowserRouter>
