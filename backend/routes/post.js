@@ -44,7 +44,7 @@ router.get("/post", optionalAuth, async (req, res) => {
   try {
     const blog = await Userpost.find().populate({
       path: "author",
-      select: "username profilepic"
+      select: "username profileimg"
     })
 
     const currentUserId = req.user?.id?.toString()
@@ -294,7 +294,7 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
       _id: user._id,
       username: user.username,
       name: user.name,
-      bio:user.boi,
+      bio:user.bio,
       profileimg: user.profileimg,
       email: user.email,
       followers: followers,
@@ -327,28 +327,67 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
 })
 
 // Edit user profile
-router.patch("/user/:userid/edit", Auth, upload.single("profileimg"), async (req, res) => {
+router.patch("/user/edit", Auth, upload.single("profileimg"), async (req, res) => {
   try{
-    const userid = req.params.userid
+    const userid = req.user.id
     const { name, bio } = req.body
 
-    let imgUrl = ""
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, { folder: "blogBoi" })
-      fs.unlinkSync(req.file.path)
-      imgUrl = result.secure_url
-    }
-    const updatedData = {}
-    if (name) updatedData.name = name
-    if (bio) updatedData.boi = bio
-    if (imgUrl) updatedData.imgUrl = profileimg
-
-    const updatedUser = await User.findByIdAndUpdate(userid, updatedData, { new: true })
-    if (!updatedUser) {
+    // Fetch current user
+    const currentUser = await User.findById(userid)
+    if (!currentUser) {
       return res.status(404).json({ message: "User not found" })
     }
 
+    const updatedData = {}
+    
+    // Handle text fields first
+    if (name) updatedData.name = name
+    if (bio) updatedData.bio = bio
+
+    // Handle image upload
+    if (req.file) {
+      // Delete old image if exists
+      if (currentUser.profileimg) {
+        try {
+          const urlParts = currentUser.profileimg.split('/')
+          const filename = urlParts[urlParts.length - 1]
+          const publicId = `blogBoiUserInfo/${filename.split('.')[0]}`
+          await cloudinary.uploader.destroy(publicId)
+          console.log("Old image deleted:", publicId)
+        } catch (deleteErr) {
+          console.log("Error deleting old image:", deleteErr)
+        }
+      }
+
+      // Upload new image
+      const result = await cloudinary.uploader.upload(req.file.path, { 
+        folder: "blogBoiUserInfo" 
+      })
+      fs.unlinkSync(req.file.path) // Delete temp file
+      updatedData.profileimg = result.secure_url
+      console.log("New image uploaded:", result.secure_url)
+    }
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      userid, 
+      updatedData, 
+      { new: true, runValidators: true }
+    )
+
+    res.status(200).json({ 
+      message: "Profile updated successfully", 
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        bio: updatedUser.bio,
+        profileimg: updatedUser.profileimg,
+        username: updatedUser.username
+      }
+    })
+
   }catch(err){
+    console.error("Update error:", err)
     res.status(500).json({ message: err.message })
   }
 })

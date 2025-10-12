@@ -17,6 +17,15 @@ export const userApi = api.injectEndpoints({
       providesTags: (result, error, userid) => [{ type: "Follow", id: userid }],
     }),
 
+    editUser: builder.mutation({
+    query: ({userid, body})=>({
+        url:`blog/user/edit`,
+        method:"PATCH",
+        body,
+      }),
+      invalidatesTags: (result, error, userid) => [{type:'User', id:userid}],
+    }),
+
     followUser: builder.mutation({
       query: ({ userid, currentUserId }) => ({
         url: `blog/user/${userid}/follow`,
@@ -47,6 +56,7 @@ export const {
   useGetUserDataQuery,
   useGetFollowingDataQuery,
   useGetFollowerDataQuery,
+  useEditUserMutation,
   useFollowUserMutation,
   useUnfollowUserMutation,
 } = userApi;

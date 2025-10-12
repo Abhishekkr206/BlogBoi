@@ -154,7 +154,7 @@ export default function PostSection() {
                 <img
                   src={author.profileimg || "https://randomuser.me/api/portraits/men/65.jpg"}
                   alt={author.username}
-                  className="w-12 h-12 rounded-full"
+                  className="w-12 h-12 rounded-full object-cover"
                 />
                 <h4 className="font-bold">{author.username}</h4>
               </div>

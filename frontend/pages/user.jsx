@@ -35,12 +35,13 @@ export default function UserProfile() {
   if(isLoading) return <Spinner/>
 
   const user = data?.response
-  const {_id, username, name, profileimg, followingCount, isfollowing } = user
+  const {_id, username, name, profileimg, followingCount, isfollowing, bio } = user
 
 const userdata = user
+console.log("User Data asdad:", userdata);
 
 
-console.log("Mitter Data:", userdata);
+console.log("Mitter Data:", bio);
 
   const handleFollow = async () => {
     try {
@@ -74,7 +75,7 @@ console.log("Mitter Data:", userdata);
           <img
             src={profileimg || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"}
             alt={username}
-            className="w-24 h-24 rounded-full"
+            className="w-30 h-30 rounded-full object-cover"
           />
           <div className="flex flex-col gap-1">
             <div className="flex items-start gap-4">
@@ -91,6 +92,9 @@ console.log("Mitter Data:", userdata);
                 </div>
               </div>
             </div>
+            {bio && (
+              <p className="text-gray-600 text-sm mt-2 max-w-md">{bio}</p>
+            )}
           </div>
         </div>
 

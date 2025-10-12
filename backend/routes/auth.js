@@ -31,7 +31,9 @@ router.post("/signup", async (req,res)=>{
                 _id: User._id,
                 username: User.username,
                 name: User.name,
-                email: User.email
+                email: User.email,
+                profileimg: User.profileimg,
+                bio: User.bio,
             }
         })
     }
@@ -72,7 +74,9 @@ router.post("/login", async (req,res)=>{
                 _id: identifyuser._id,
                 username: identifyuser.username,
                 name: identifyuser.name,
-                email: identifyuser.email
+                email: identifyuser.email,
+                profileimg: identifyuser.profileimg,
+                bio: identifyuser.bio,
             }
         })
 

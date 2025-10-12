@@ -9,7 +9,7 @@ import { useState } from "react";
 export default function PostCard({data}) {
 
   const navigate = useNavigate()
-  const {_id, author, like, isliked, title, content,comment, createdAt } = data;
+  const {_id, author, profileimg, like, isliked, title, content,comment, createdAt } = data;
   
   const currentUserId = useSelector((state) => state.auth.user?._id);
   const isProfileSection = data?.profileSection || false;
@@ -18,15 +18,15 @@ export default function PostCard({data}) {
   const isAuthor = currentUserId === authorId;
 
   // 🔍 DEBUG - Remove these after fixing
-  console.log("=== POST CARD DEBUG ===");
+  // console.log("=== POST CARD DEBUG ===");
   console.log("Full data:", data);
-  console.log("Current User ID:", currentUserId);
-  console.log("Author object:", author);
-  console.log("Author ID:", authorId);
-  console.log("isProfileSection:", isProfileSection);
-  console.log("isAuthor:", isAuthor);
-  console.log("Should show delete?", isProfileSection && isAuthor);
-  console.log("======================");
+  // console.log("Current User ID:", currentUserId);
+  // console.log("Author object:", author);
+  // console.log("Author ID:", authorId);
+  // console.log("isProfileSection:", isProfileSection);
+  // console.log("isAuthor:", isAuthor);
+  // console.log("Should show delete?", isProfileSection && isAuthor);
+  // console.log("======================");
 
   const [likePost] = useLikePostMutation()
   const [deleteLike] = useDeleteLikeMutation()
@@ -111,7 +111,7 @@ export default function PostCard({data}) {
               >
                 <img src={author.profileimg || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"}
                      alt={author.username}
-                     className="w-10 h-10 rounded-full" />
+                     className="w-10 h-10 rounded-full object-cover" />
                 <h4 className="font-semibold">{author.username}</h4>
               </div>
               <span className="text-gray-500 text-sm">{new Date(createdAt).toLocaleString()}</span>

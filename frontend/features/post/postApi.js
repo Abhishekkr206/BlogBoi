@@ -33,7 +33,7 @@ export const postApi = api.injectEndpoints({
             }),
             invalidatesTags:[{type:"Post", id:"LIST"}],
         }),
-        
+
         likePost: builder.mutation({
             query: ({authorId, postid}) => ({
                 url:`blog/post/${postid}/like`,
