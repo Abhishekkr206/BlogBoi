@@ -143,9 +143,9 @@ export default function PostSection() {
   };
 
   return (
-    <div className="flex gap-4 max-w-6xl mx-auto p-6">
+    <div className="flex gap-4 max-w-6xl mx-auto p-6 pb-20">
       {/* Left Side - Post 70% */}
-      <div className="flex-1 basis-7/10 border rounded-lg shadow-md p-4 flex flex-col gap-4 bg-white">
+      <div className="flex-1 basis-7/10 border rounded-lg shadow-md p-4 flex flex-col gap-4 bg-white pb-20">
         {/* User Info + Follow */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -210,8 +210,11 @@ export default function PostSection() {
         <div className="flex flex-col gap-3 mt-2">
           <h2 className="text-4xl font-semibold">{title}</h2>
           {img && <img src={img} alt={title} className="w-full h-fit" />}
-          <p className="text-gray-700">{content}</p>
-        </div>
+          <div 
+            className="text-gray-700 prose prose-lg max-w-none text-lg" 
+            dangerouslySetInnerHTML={{ __html: content }}
+          />        
+          </div>
       </div>
 
       {/* Right Side - Comments 30% */}

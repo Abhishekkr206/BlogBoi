@@ -138,11 +138,25 @@ router.delete("/post/:postid", Auth, async (req, res) => {
     const postid = req.params.postid
     const userid = req.user.id
 
-    const result = await Userpost.deleteOne({ _id: postid, author: userid })
+    // First, find the post to get the image URL
+    const post = await Userpost.findOne({ _id: postid, author: userid })
 
-    if (result.deletedCount === 0) {
+    if (!post) {
       return res.status(404).json({ message: "Post not found or not authorized" })
     }
+
+    // Delete image from Cloudinary if it exists
+    if (post.img) {
+      // Extract public_id from the Cloudinary URL
+      const urlParts = post.img.split('/')
+      const filename = urlParts[urlParts.length - 1]
+      const publicId = `blogBoi/${filename.split('.')[0]}`
+      
+      await cloudinary.uploader.destroy(publicId)
+    }
+
+    // Delete the post from database
+    await Userpost.deleteOne({ _id: postid, author: userid })
 
     res.status(200).json({ message: "your post deleted" })
   } catch (err) {

@@ -68,6 +68,11 @@ export default function PostCard({data}) {
     return text.length > limit ? text.slice(0, limit) + "..." : text;
   };
 
+  const stripHtml = (html) => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+  };
   const handleRedirect = (e)=>{
     e.stopPropagation();
     navigate(`/user/${author._id}`)
@@ -119,7 +124,9 @@ export default function PostCard({data}) {
               
             <div>
               <h2 className="font-bold text-lg">{title}</h2>
-              <p className="text-gray-700 text-sm">{truncate(content, 200)}</p>
+              <p className="text-gray-700 text-sm">
+                {truncate(stripHtml(content), 200)}
+              </p>            
             </div>
               
             <div className="flex items-center gap-4 pt-2">

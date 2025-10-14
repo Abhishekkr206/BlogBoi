@@ -1,94 +1,120 @@
-import { useState } from "react";
-import { Bold, Italic, Underline } from "lucide-react";
+import { useState, useRef } from "react";
+import { Image, X } from "lucide-react";
 import { useAddPostMutation } from "../features/post/postApi";
+import TextEditor from "../components/TextEditor";
 
 export default function CreatePost() {
-  const [addPost] = useAddPostMutation()
+  const [addPost] = useAddPostMutation();
+  const editorRef = useRef(null);
 
   const [postData, setPostData] = useState({
-    img:null,
-    title:"",
-    content:""
+    img: null,
+    title: "",
+    content: ""
   });
 
   const handleChanges = (e) => {
-    if (e.target.type === "file") {
-      setPostData({ ...postData, img: e.target.files[0] }); // single file
+    if (e.target.name === "img" && e.target.files?.[0]) {
+      setPostData({ ...postData, img: e.target.files[0] });
     } else {
       setPostData({ ...postData, [e.target.name]: e.target.value });
     }
   };
 
-  const handleSubmit = async (e)=>{
+  const removeImage = () => {
+    setPostData({ ...postData, img: null });
+  };
 
-    e.preventDefault()
-
-    try{
-      const formData = new FormData()
-      formData.append("title", postData.title)
-      formData.append("content", postData.content)
+  const handleSubmit = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("title", postData.title);
+      formData.append("content", postData.content);
 
       if (postData.img) {
         formData.append("img", postData.img);
       }
 
-      await addPost(formData).unwrap()
+      await addPost(formData).unwrap();
 
-      console.log("ho gaya post create")
+      console.log("Post created successfully");
 
-      // Reset the form here
       setPostData({ img: null, title: "", content: "" });
+      
+      if (editorRef.current) {
+        editorRef.current.clearContent();
+      }
+    } catch (err) {
+      console.log(err);
     }
-    catch(err){
-      console.log(err)
-    }
-  }
-  
+  };
 
   return (
-    <div className="min-h-screen bg-white/10 text-black px-8 py-5">
-      <form onSubmit={handleSubmit}>
-        <input type="file" accept="image/*" value={postData.img} onChange={handleChanges} />
-        <div className="max-w-3xl mx-auto">
-          {/* Title input */}
+    <div className="min-h-screen bg-gray-50/20">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="bg-white border rounded-xl p-4 mb-6 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="image-upload"
+              className="p-3 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer border border-gray-700"
+              title="Add Image"
+            >
+              <Image size={20} className="text-gray-700" />
+            </label>
+            <input
+              id="image-upload"
+              name="img"
+              type="file"
+              accept="image/*"
+              onChange={handleChanges}
+              className="hidden"
+            />
+            
+            {postData.img && (
+              <span className="text-sm text-gray-600 bg-gray-100 px-3 py-2 rounded-lg">
+                {postData.img.name}
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            type="button"
+            className="px-6 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-medium transition-all"
+          >
+            Publish
+          </button>
+        </div>
+
+        <div className="bg-white border rounded-xl p-8 shadow-sm">
           <input
             type="text"
             name="title"
-            placeholder="Title..."
+            placeholder="Untitled Post"
             value={postData.title}
             onChange={handleChanges}
-            className="w-full text-5xl font-bold outline-none placeholder-gray-400 mb-6 bg-white border-1 border-black/20 p-3 rounded-xl"
+            className="w-full text-5xl font-bold outline-none placeholder-gray-400 mb-5 bg-transparent border border-gray-700 p-2 rounded-xl "
           />
-          
-          {/* Content editor */}
-          <textarea
-            name="content"
-            placeholder="Tell your story..."
-            value={postData.content}
-            onChange={handleChanges}
-            className="w-full h-[62vh] text-xl leading-relaxed outline-none placeholder-gray-400 resize-none bg-white border-1 border-black/20 p-3 rounded-xl"
-          />
-  
-          {/* Formatting toolbar and Publish button */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-gray-200 rounded transition">
-                <Bold size={20} />
-              </button>
-              <button className="p-2 hover:bg-gray-200 rounded transition">
-                <Italic size={20} />
-              </button>
-              <button className="p-2 hover:bg-gray-200 rounded transition">
-                <Underline size={20} />
+
+          {postData.img && (
+            <div className="relative mb-6">
+              <img 
+                src={URL.createObjectURL(postData.img)} 
+                alt="Preview" 
+                className="w-full h-auto rounded-lg"
+              />
+              <button
+                onClick={removeImage}
+                className="absolute top-2 right-2 p-2 bg-gray-700 hover:bg-gray-800 text-white rounded-full transition"
+              >
+                <X size={20} />
               </button>
             </div>
-            
-            <button className="px-6 py-2 bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition" type="submit">
-              Publish
-            </button>
-          </div>
+          )}
+
+          <TextEditor ref={editorRef} onChange={setPostData} />
         </div>
-      </form>
+      </div>
     </div>
   );
 }

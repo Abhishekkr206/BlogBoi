@@ -100,7 +100,7 @@ console.log("Mitter Data:", bio);
 
         {/* Right: Follow Button */}
         <button 
-          className="px-4 py-1 bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition" 
+          className="px-4 py-2 text-lg text-center bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition" 
           onClick={handleFollow}
         >
           {isfollowingState ? "Unfollow" : "Follow"}
