@@ -8,6 +8,7 @@ import { Link, useParams } from "react-router-dom";
 import { useGetCommentsQuery, useAddCommentMutation } from "../features/comment/commentApi";
 import { useFollowUserMutation, useUnfollowUserMutation } from "../features/user/userApi";
 import { useSelector } from "react-redux";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 export default function PostSection() {
   const { postid } = useParams();
@@ -19,6 +20,12 @@ export default function PostSection() {
   const [followUser] = useFollowUserMutation();
   const [unfollowUser] = useUnfollowUserMutation();
 
+  // Pagination states for comments
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [allComments, setAllComments] = useState([]);
+
+  // Form and UI states
   const [formData, setFormData] = useState({
     postid,
     content: "",
@@ -28,18 +35,40 @@ export default function PostSection() {
   const [liked, setLiked] = useState(false);
   const [following, setFollowing] = useState(false);
 
+  // API queries
   const { data, isLoading, isError } = useGetPostByIdQuery(postid);
-  const { data: commentData, isLoading: commentIsLoading } = useGetCommentsQuery(postid);
+  const { data: commentData, isLoading: commentIsLoading } = useGetCommentsQuery({ postId: postid, page });
 
   const post = data?.message;
-  const comment = commentData?.message || [];
   const currentUserId = useSelector((state) => state.auth.user?._id);
+
+  // Reset comments when postid changes
+  useEffect(() => {
+    setPage(1);
+    setAllComments([]);
+    setHasMore(true);
+  }, [postid]);
   
-  // DEBUG: Console logs
-  console.log("Full Data:", data);
-  console.log("Post:", post);
-  console.log("Author:", post?.author);
-  console.log("Current User ID:", currentUserId);
+  // Load comments when data changes
+  useEffect(() => {
+    if (commentData?.message) {
+      if (page === 1) {
+        // First page: replace all comments
+        setAllComments(commentData.message);
+      } else {
+        // Subsequent pages: append new comments
+        setAllComments((prev) => {
+          const newComments = commentData.message.filter(
+            (comment) => !prev.some((c) => c._id === comment._id)
+          );
+          return [...prev, ...newComments];
+        });
+      }
+
+      // Check if there are more comments
+      setHasMore(commentData.hasMore !== undefined ? commentData.hasMore : false);
+    }
+  }, [commentData, page]);
 
   // useEffect - Post data se state update karo
   useEffect(() => {
@@ -56,8 +85,12 @@ export default function PostSection() {
     }
   }, [post]);
 
+  const fetchMore = () => {
+    setPage((prev) => prev + 1);
+  };
+
   // NOW EARLY RETURNS ARE SAFE
-  if (isLoading || commentIsLoading) {
+  if (isLoading || (commentIsLoading && page === 1)) {
     return <Spinner />;
   }
 
@@ -75,9 +108,10 @@ export default function PostSection() {
   }
 
   // Destructure safely
-  const { _id, author, img, like, isliked, title, content, isfollowing, createdAt } = post;
+  const { _id, author, img, title, content, createdAt } = post;
   
   const authorId = author._id;
+  
   // Extra safety check
   if (!author._id) {
     console.error("Author ID is missing:", author);
@@ -108,11 +142,11 @@ export default function PostSection() {
   const handleLike = async () => {
     try {
       if (liked) {
-        await deleteLike({authorId, postid}).unwrap();
+        await deleteLike({ authorId, postid }).unwrap();
         setLiked(false);
         setTotalLikes((prev) => prev - 1);
       } else {
-        await likePost({authorId, postid}).unwrap();
+        await likePost({ authorId, postid }).unwrap();
         setLiked(true);
         setTotalLikes((prev) => prev + 1);
       }
@@ -128,13 +162,11 @@ export default function PostSection() {
       return;
     }
     try {
-      console.log("Following user ID:", authorId); // Debug log
-      
       if (following) {
-        await unfollowUser({userid:authorId,currentUserId}).unwrap();
+        await unfollowUser({ userid: authorId, currentUserId }).unwrap();
         setFollowing(false);
       } else {
-        await followUser({userid:authorId,currentUserId}).unwrap();
+        await followUser({ userid: authorId, currentUserId }).unwrap();
         setFollowing(true);
       }
     } catch (err) {
@@ -214,7 +246,7 @@ export default function PostSection() {
             className="text-gray-700 prose prose-lg max-w-none text-lg" 
             dangerouslySetInnerHTML={{ __html: content }}
           />        
-          </div>
+        </div>
       </div>
 
       {/* Right Side - Comments 30% */}
@@ -241,10 +273,24 @@ export default function PostSection() {
           </div>
         </form>
 
-        {/* Comments list */}
-        {comment.map((c) => (
-          <CommentCard key={c._id} comments={c} />
-        ))}
+        {/* Comments list with Infinite Scroll */}
+        <InfiniteScroll
+          dataLength={allComments.length}
+          next={fetchMore}
+          hasMore={hasMore}
+          loader={<h4 className="text-center py-4">Loading more comments...</h4>}
+          endMessage={
+            <p className="text-center py-4 text-gray-500">
+              No more comments 💬
+            </p>
+          }
+        >
+          <div className="flex flex-col gap-4">
+            {allComments.map((c) => (
+              <CommentCard key={c._id} comments={c} />
+            ))}
+          </div>
+        </InfiniteScroll>
       </div>
     </div>
   );

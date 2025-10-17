@@ -56,11 +56,7 @@ router.get("/post", optionalAuth, async (req, res) => {
         select: "username profileimg"
     })
 
-    // const blog = await Userpost.find().populate({
-    //   path: "author",
-    //   select: "username profileimg"
-    // })
-
+    const totalPosts = await Userpost.countDocuments();
     const currentUserId = req.user?.id?.toString()
 
     const blogs = blog.map(post => ({
@@ -73,10 +69,12 @@ router.get("/post", optionalAuth, async (req, res) => {
       isliked: currentUserId ? post.like.map(id => id.toString()).includes(currentUserId) : false,
       comment: post.comment.length,
       createdAt: post.createdAt,
-      updatedAt: post.updatedAt
+      updatedAt: post.updatedAt,
     }))
 
-    res.status(200).json({ message: blogs })
+    res.status(200).json({ message: blogs,      
+      hasMore: skip + blog.length < totalPosts,
+    })
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
@@ -202,26 +200,30 @@ router.post("/comment/:postid", Auth, async (req, res) => {
 // Get comments of a post
 router.get("/comment/:postid", async (req, res) => {
   try {
-    const postid = req.params.postid
+    const postid = req.params.postid;
 
-    const page = parseInt(req.query.page) || 1; // default page 1
-    const limit = parseInt(req.query.limit) || 5; // default 5 comments per page
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const CommentData = await Userpost.findById(postid)
-      .populate("author", "username profileimg follower")
-      .populate({
-        path: "comment",
-        options: { skip, limit, sort: { createdAt: -1 } }, // newest first
-        populate: { path: "author", select: "username profileimg" } // populate comment author
-      });
+    // Count total comments for this post
+    const totalComments = await Comment.countDocuments({ post: postid });
 
-    res.status(200).json({ message: CommentData.comment })
+    // Find comments by post reference
+    const comments = await Comment.find({ post: postid })
+      .populate("author", "username profileimg")
+      .sort({ createdAt: -1 }) // Newest first
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      message: comments,
+      hasMore: skip + comments.length < totalComments,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    res.status(500).json({ message: err.message });
   }
-})
-
+});
 // Delete a comment
 router.delete("/comment/:commentid", Auth, async (req, res) => {
   try {
@@ -326,6 +328,7 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
 
+    const totalPosts = await Userpost.countDocuments({ author: userid });
     const userblog = await Userpost.find({ author: userid }).sort({createdAt: -1}).skip(skip).limit(limit)
 
     const user = await User.findById({ _id: userid })
@@ -359,8 +362,9 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
         isliked: blog.like.map(id => id.toString()).includes(req.user?.id),
         comment: blog.comment.length,
         createdAt: blog.createdAt,
-        profileSection: true
-      }))
+        profileSection: true,
+      })),
+      hasMore: skip + userblog.length < totalPosts,
     }
 
     res.status(200).json({ response })

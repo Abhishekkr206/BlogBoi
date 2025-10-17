@@ -4,14 +4,15 @@ export const commentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // ✅ Get comments for a post
     getComments: builder.query({
-      query: (postId) => `blog/comment/${postId}?page=1&limit=5`,
-      providesTags: (result, error, postId) =>
+      query: ({postId,page}) => `blog/comment/${postId}?page=${page}&limit=4`,
+      providesTags: (result, error, {postId}) =>
         result?.message
           ? [
               ...result.message.map(({ _id }) => ({ type: "Comment", id: _id })),
               { type: "Comment", id: `LIST-${postId}` },
             ]
           : [{ type: "Comment", id: `LIST-${postId}` }],
+      keepUnusedDataFor: 30, // Add this to prevent stale cache
     }),
 
     // ✅ Add a comment to a post

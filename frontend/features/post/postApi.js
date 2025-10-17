@@ -3,7 +3,7 @@ import { api } from "../../app/apiSlice";
 export const postApi = api.injectEndpoints({
     endpoints: (builder) => ({
         getPosts: builder.query({
-          query: () => "blog/post?page=1&limit=6",
+          query: ({page}) => `blog/post?page=${page}&limit=6`,
           providesTags: (result) =>
             result?.message
               ? [
