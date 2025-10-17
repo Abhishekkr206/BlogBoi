@@ -281,7 +281,7 @@ export default function PostSection() {
           loader={<h4 className="text-center py-4">Loading more comments...</h4>}
           endMessage={
             <p className="text-center py-4 text-gray-500">
-              No more comments 💬
+              No more comments 
             </p>
           }
         >

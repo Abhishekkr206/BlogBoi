@@ -111,7 +111,7 @@ useEffect(() => {
         next={fetchMore}
         hasMore={hasMore}
         loader={<h4>Loading more posts...</h4>}
-        endMessage={<p>No more posts 😅</p>}
+        endMessage={<p>No more posts </p>}
       >
         <div className="flex flex-col gap-2 items-center">
           {allPosts.map((post) => (

@@ -47,16 +47,46 @@ router.get("/post", optionalAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
 
-    const blog = await Userpost.find()
-      .sort({createdAt: -1})
-      .skip(skip)
-      .limit(limit)
-      .populate({
-        path: "author",
-        select: "username profileimg"
+    // 70% trending, 30% recent
+    const trendingLimit = Math.ceil(limit * 0.7)
+    const recentLimit = limit - trendingLimit
+
+    // Get trending posts (fetch extra for proper pagination)
+    const trending = await Userpost.aggregate([
+      {
+        $addFields: {
+          engagementScore: {
+            $add: [
+              { $multiply: [{ $size: { $ifNull: ["$like", []] } }, 2] },
+              { $multiply: [{ $size: { $ifNull: ["$comment", []] } }, 3] }
+            ]
+          }
+        }
+      },
+      { $sort: { engagementScore: -1 } },
+      { $limit: limit * page } // fetch enough for pagination
+    ])
+
+
+    const trendingIds = trending.map(p => p._id)
+
+    // Get recent posts (exclude trending, fetch extra)
+    const recent = await Userpost.find({ _id: { $nin: trendingIds } })
+      .sort({ createdAt: -1 })
+      .limit(limit * page)
+
+    // Merge and shuffle
+    const merged = [...trending, ...recent].sort(() => Math.random() - 0.5)
+
+    // Apply proper pagination
+    const blog = merged.slice(skip, skip + limit)
+
+    await Userpost.populate(blog, {
+      path: "author",
+      select: "username profileimg"
     })
 
-    const totalPosts = await Userpost.countDocuments();
+    const totalPosts = await Userpost.countDocuments()
     const currentUserId = req.user?.id?.toString()
 
     const blogs = blog.map(post => ({
@@ -72,13 +102,16 @@ router.get("/post", optionalAuth, async (req, res) => {
       updatedAt: post.updatedAt,
     }))
 
-    res.status(200).json({ message: blogs,      
+    res.status(200).json({
+      message: blogs,
       hasMore: skip + blog.length < totalPosts,
     })
+
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
 })
+
 
 // Get a specific post with full details + comments
 router.get("/post/:postid", optionalAuth, async (req, res) => {

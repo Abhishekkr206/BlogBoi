@@ -49,7 +49,7 @@ export default function Home() {
           loader={<h4 className="text-center py-4">Loading more posts...</h4>}
           endMessage={
             <p className="text-center py-4 text-gray-500">
-              No more posts to show 🎉
+              No more posts to show 
             </p>
           }
         >
