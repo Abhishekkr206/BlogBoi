@@ -276,17 +276,39 @@ router.post("/comment/:commentid/reply", Auth, async (req, res) => {
 router.get("/comment/:commentid/reply", async (req, res) => {
   try {
     const commentId = req.params.commentid;
-    
-    const comment = await Comment.findById(commentId).populate({
-      path: "reply",
-      populate: { path: "author", select: "username profileimg" }
-    });
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    // First, get the comment to check how many replies it has
+    const comment = await Comment.findById(commentId).select('reply');
+    
     if (!comment) {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    res.status(200).json(comment.reply);
+    const totalReplies = comment.reply?.length || 0;
+
+    // Now populate the replies with pagination
+    const commentWithReplies = await Comment.findById(commentId)
+      .populate({
+        path: "reply",
+        options: { 
+          skip: skip, 
+          limit: limit, 
+          sort: { createdAt: -1 } 
+        },
+        populate: { 
+          path: "author", 
+          select: "username profileimg" 
+        }
+      });
+
+    res.status(200).json({
+      message: commentWithReplies.reply || [],
+      hasMore: skip + (commentWithReplies.reply?.length || 0) < totalReplies,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

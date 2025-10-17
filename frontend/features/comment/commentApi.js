@@ -45,11 +45,11 @@ export const commentApi = api.injectEndpoints({
 
     // ✅ Get replies for a comment
     getReplies: builder.query({
-      query: (commentId) => `blog/comment/${commentId}/reply`,
-      providesTags: (result, error, commentId) =>
+      query: ({commentId, page}) => `blog/comment/${commentId}/reply?page=${page}&limit=4`,
+      providesTags: (result, error, {commentId}) =>
         result
           ? [
-              ...result.map(({ _id }) => ({ type: "Reply", id: _id })),
+              ...result.message.map(({ _id }) => ({ type: "Reply", id: _id })),
               { type: "Reply", id: `LIST-${commentId}` },
             ]
           : [{ type: "Reply", id: `LIST-${commentId}` }],
