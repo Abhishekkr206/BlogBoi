@@ -37,7 +37,7 @@ export default function FollowCard({ data }) {
           <div className="space-y-3">
               <div
                 key={person?._id}
-                className="flex items-center gap-5 p-5 bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all duration-200"
+                className="flex items-center gap-5 p-5 bg-white rounded-2xl border hover:shadow-md transition-all duration-200"
               >
                 {/* Profile Image */}
                 <div className="flex-shrink-0">
@@ -45,10 +45,10 @@ export default function FollowCard({ data }) {
                     <img
                       src={person?.profileimg}
                       alt={person?.name || person?.username}
-                      className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-50"
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-gray-50 border"
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center ring-2 ring-gray-50">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center border">
                       <User className="w-7 h-7 text-gray-400" />
                     </div>
                   )}
@@ -56,7 +56,7 @@ export default function FollowCard({ data }) {
 
                 {/* User Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate cursor-pointer hover:text-gray-700 transition-colors inline text-base" onClick={handleRedirect}>
+                  <h3 className="font-semibold text-gray-900 hover:underline truncate cursor-pointer hover:text-gray-700 transition-colors inline text-base" onClick={handleRedirect}>
                     {person?.name || 'Unknown User'}
                   </h3>
                   {person?.username && (

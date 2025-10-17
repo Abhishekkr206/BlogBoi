@@ -2,12 +2,16 @@ const express = require("express")
 const jwt = require("jsonwebtoken")
 const auth = require("../models/user")
 const { findOne } = require("../models/user")
+const OTP = require("../models/OTP")
+const genrateOtp = require("../utils/generateOtp")
+const nodemailer = require("nodemailer");
 
 require("dotenv").config()
 const JWT_SECRET = process.env.JWT_SECRET
 
 const router = express.Router()
 router.use(express.json())
+
 
 router.post("/signup", async (req,res)=>{
     try{

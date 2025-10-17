@@ -3,7 +3,7 @@ import { api } from "../../app/apiSlice";
 export const postApi = api.injectEndpoints({
     endpoints: (builder) => ({
         getPosts: builder.query({
-          query: () => "blog/post",
+          query: () => "blog/post?page=1&limit=6",
           providesTags: (result) =>
             result?.message
               ? [
@@ -14,7 +14,7 @@ export const postApi = api.injectEndpoints({
         }),
         
         getPostById: builder.query({
-            query: (postid) => `blog/post/${postid}`,
+            query: (postid) => `blog/post/${postid}?page=1&limit=5`,
             providesTags: (result, error, postid) => {
                 const authorId = result?.message?.author?._id;
                 

@@ -20,15 +20,17 @@ export default function FollowerPage() {
 
     return(
         <>
-            <div className="flex flex-col items-center justify-center h-[80vh]">
-              {followerData.length > 0 ? (
-                followerData.map((follower) => (
-                  <FollowCard key={follower._id} data={follower} />
-                ))
-              ) : (
-                <p>No followers yet.</p>
-              )}
+        <div className='h-screen flex justify-center items-start bg-gray-50/50'>
+            <div className="h-[80vh] w-[70vw] flex flex-col items-center justify-start py-5 space-y-2">
+                  {followerData.length > 0 ? (
+                    followerData.map((follower) => (
+                      <FollowCard key={follower._id} data={follower} />
+                    ))
+                  ) : (
+                    <p>No followers yet.</p>
+                  )}
             </div>
+          </div>
         </>
     )
 }

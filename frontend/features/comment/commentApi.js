@@ -4,7 +4,7 @@ export const commentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // ✅ Get comments for a post
     getComments: builder.query({
-      query: (postId) => `blog/comment/${postId}`,
+      query: (postId) => `blog/comment/${postId}?page=1&limit=5`,
       providesTags: (result, error, postId) =>
         result?.message
           ? [

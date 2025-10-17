@@ -24,11 +24,6 @@ export default function SignupForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-
     try {
       const res = await signup({
         username: formData.username,
@@ -132,19 +127,6 @@ export default function SignupForm() {
                 value={formData.password}
                 onChange={handleChanges}
                 placeholder="Enter password"
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-black"
-              />
-            </div>
-
-            {/* Re-enter Password */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Re-enter Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChanges}
-                placeholder="Re-enter password"
                 className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-black"
               />
             </div>

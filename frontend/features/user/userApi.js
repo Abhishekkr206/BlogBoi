@@ -3,7 +3,7 @@ import { api } from "../../app/apiSlice";
 export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getUserData: builder.query({
-      query: (userid) => `blog/user/${userid}`,
+      query: (userid) => `blog/user/${userid}?page=1&limit=7`,
       providesTags: (result, error, userid) => [{ type: "User", id: userid }],
     }),
 

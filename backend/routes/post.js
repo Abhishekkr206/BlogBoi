@@ -8,6 +8,7 @@ const Comment = require("../models/comment")
 const fs = require("fs")
 const upload = require("../middleware/multerMiddleware")
 const cloudinary = require("../utils/cloudinary")
+const { parse } = require("path")
 
 const router = express.Router()
 
@@ -42,10 +43,23 @@ router.post("/post", Auth, upload.single("img"), async (req, res) => {
 // Get all posts (front page)
 router.get("/post", optionalAuth, async (req, res) => {
   try {
-    const blog = await Userpost.find().populate({
-      path: "author",
-      select: "username profileimg"
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
+
+    const blog = await Userpost.find()
+      .sort({createdAt: -1})
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: "author",
+        select: "username profileimg"
     })
+
+    // const blog = await Userpost.find().populate({
+    //   path: "author",
+    //   select: "username profileimg"
+    // })
 
     const currentUserId = req.user?.id?.toString()
 
@@ -189,10 +203,19 @@ router.post("/comment/:postid", Auth, async (req, res) => {
 router.get("/comment/:postid", async (req, res) => {
   try {
     const postid = req.params.postid
-    const CommentData = await Userpost.findById(postid).populate({
-      path: "comment",
-      populate: { path: "author", select: "username profileimg" }
-    })
+
+    const page = parseInt(req.query.page) || 1; // default page 1
+    const limit = parseInt(req.query.limit) || 5; // default 5 comments per page
+    const skip = (page - 1) * limit;
+
+    const CommentData = await Userpost.findById(postid)
+      .populate("author", "username profileimg follower")
+      .populate({
+        path: "comment",
+        options: { skip, limit, sort: { createdAt: -1 } }, // newest first
+        populate: { path: "author", select: "username profileimg" } // populate comment author
+      });
+
     res.status(200).json({ message: CommentData.comment })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -298,7 +321,13 @@ router.delete("/comment/:replyid/reply", Auth, async (req, res) => {
 router.get("/user/:userid", optionalAuth, async (req, res) => {
   try {
     const userid = req.params.userid
-    const userblog = await Userpost.find({ author: userid })
+
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
+
+    const userblog = await Userpost.find({ author: userid }).sort({createdAt: -1}).skip(skip).limit(limit)
+
     const user = await User.findById({ _id: userid })
 
     const followers = user.follower || []
