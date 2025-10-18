@@ -563,7 +563,7 @@ router.get("/user/:userid/follower", optionalAuth, async (req, res) => {
 
     let myFollowingList = []
     if (req.user) {
-      const currentUser = await User.findById(req.user.id).select("following")
+      const currentUser = await User.findById(req.user.id).select("follower")
       myFollowingList = currentUser.following.map(id => id.toString())
     }
 

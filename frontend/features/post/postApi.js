@@ -39,10 +39,10 @@ export const postApi = api.injectEndpoints({
                 url:`blog/post/${postid}/like`,
                 method:"POST",
             }),
-            invalidatesTags: (result, error, { postid, authorId }) => [
-                { type: "Post", id: postid }, 
-                { type: "User", id: authorId },
-            ]
+            // invalidatesTags: (result, error, { postid, authorId }) => [
+            //     { type: "Post", id: postid }, 
+            //     { type: "User", id: authorId },
+            // ]
         }),
         
         deleteLike: builder.mutation({
@@ -50,10 +50,10 @@ export const postApi = api.injectEndpoints({
             url: `blog/post/${postid}/unlike`,
             method: "DELETE",
           }),
-          invalidatesTags: (result, error, { postid, authorId }) => [
-              { type: "Post", id: postid },
-              { type: "User", id: authorId },
-          ]
+        //   invalidatesTags: (result, error, { postid, authorId }) => [
+        //       { type: "Post", id: postid },
+        //       { type: "User", id: authorId },
+        //   ]
         }),
         
         deletePost: builder.mutation({

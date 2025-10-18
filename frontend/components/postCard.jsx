@@ -79,6 +79,7 @@ export default function PostCard({data}) {
   }
 
   const deletePostHandler = async (e)=>{
+    e.preventDefault();
     e.stopPropagation();
     console.log("🗑️ Delete button clicked!");
     try{

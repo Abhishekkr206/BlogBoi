@@ -16,7 +16,7 @@ export const authApi = api.injectEndpoints({
           // save user in Redux
           api.dispatch(setUser(data.user));
 
-          // 🔥 save user in localStorage
+          // save user in localStorage
           localStorage.setItem("user", JSON.stringify(data.user));
         } catch (err) {
           console.log(err);
@@ -36,7 +36,46 @@ export const authApi = api.injectEndpoints({
           // save user in Redux
           api.dispatch(setUser(data.user));
 
-          // 🔥 save user in localStorage
+          // save user in localStorage
+          localStorage.setItem("user", JSON.stringify(data.user));
+        } catch (err) {
+          console.log(err);
+        }
+      },
+    }),
+    google: builder.mutation({
+      query:({token}) => ({
+        url:"/auth/google",
+        method:"POST",
+        body:{token},
+      }),
+      async onQueryStarted(arg, api) {
+        try {
+          const { data } = await api.queryFulfilled;
+          
+          if(data.user && data.user._id){
+            api.dispatch(setUser(data.user));
+            localStorage.setItem("user", JSON.stringify(data.user));
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      },
+    }),
+    validateOtp: builder.mutation({
+      query: (body) => ({
+        url: "/auth/validateotp",
+        method: "POST",
+        body,
+      }),
+      async onQueryStarted(arg, api) {
+        try {
+          const { data } = await api.queryFulfilled;
+
+          // save user in Redux
+          api.dispatch(setUser(data.user));
+
+          //  save user in localStorage
           localStorage.setItem("user", JSON.stringify(data.user));
         } catch (err) {
           console.log(err);
@@ -55,7 +94,7 @@ export const authApi = api.injectEndpoints({
           // clear user from Redux
           api.dispatch(clearUser());
 
-          // 🔥 remove from localStorage
+          // remove from localStorage
           localStorage.removeItem("user");
         } catch (err) {
           console.log(err);
@@ -65,4 +104,10 @@ export const authApi = api.injectEndpoints({
   }),
 });
 
-export const { useSignupMutation, useLoginMutation, useLogoutMutation } = authApi;
+export const { 
+  useSignupMutation, 
+  useLoginMutation, 
+  useLogoutMutation,
+  useGoogleMutation,
+  useValidateOtpMutation
+} = authApi;

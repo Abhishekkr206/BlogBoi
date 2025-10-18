@@ -12,12 +12,12 @@ const UserSchema = new mongoose.Schema({
     following:[{type:mongoose.Schema.Types.ObjectId, ref:'User'}],
 },{timestamps:true})
 
+
 UserSchema.pre("save", async function(next){
-    if(!this.isModified("password")) return next()
+    if(!this.isModified("password") || !this.password) return next()
     this.password = await bcrypt.hash(this.password,10)
     return next()
 })
-
 
 UserSchema.methods.comparepass = function(password){
     return bcrypt.compare(password, this.password)
