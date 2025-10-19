@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useLikePostMutation, useDeleteLikeMutation, useDeletePostMutation} from "../features/post/postApi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function PostCard({data}) {
 
@@ -32,10 +32,17 @@ export default function PostCard({data}) {
   const [deleteLike] = useDeleteLikeMutation()
   const [deletePost] = useDeletePostMutation()
   
-  const [totalLikes, setTotalLikes] = useState(like.length)
+  const [totalLikes, setTotalLikes] = useState(like)
   const [liked, setLiked] = useState(isliked);
+  const [commentCount, setCommentCount] = useState(comment);
 
-  const handleSubmit = async (e)=>{
+  useEffect(() => {
+    setTotalLikes(like);
+    setLiked(isliked);
+    setCommentCount(comment);
+  }, [like, isliked, comment]);
+
+  const handleLike = async (e)=>{
     e.preventDefault()
     e.stopPropagation();
     try{
@@ -131,13 +138,13 @@ export default function PostCard({data}) {
             </div>
               
             <div className="flex items-center gap-4 pt-2">
-              <button className="flex items-center gap-1 cursor-pointer" onClick={handleSubmit}>
+              <button className="flex items-center gap-1 cursor-pointer" onClick={handleLike}>
                 {liked?<IconHeartFilled  className="w-5 h-5 text-red-500 " /> :<Heart className="w-5 h-5 text-red-500 " />}
                 <span>{totalLikes}</span>
               </button>
               <div className="flex items-center gap-1">
                 <MessageCircle className="w-5 h-5 text-gray-600" />
-                <span>{comment}</span>
+                <span>{commentCount}</span>
               </div>
             </div>
           </div>

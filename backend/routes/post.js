@@ -95,7 +95,7 @@ router.get("/post", optionalAuth, async (req, res) => {
       title: post.title,
       content: post.content,
       img: post.img,
-      like: post.like,
+      like: post.like.length,
       isliked: currentUserId ? post.like.map(id => id.toString()).includes(currentUserId) : false,
       comment: post.comment.length,
       createdAt: post.createdAt,
@@ -133,7 +133,7 @@ router.get("/post/:postid", optionalAuth, async (req, res) => {
       title: blog.title,
       content: blog.content,
       img: blog.img,
-      like: blog.like,
+      like: blog.like.length,
       isfollowing: req.user ? followers.map(id => id.toString()).includes(req.user.id) : false,
       isliked: currentUserId ? blog.like.map(id => id.toString()).includes(currentUserId) : false,
       comment: blog.comment,
@@ -413,7 +413,7 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
         title: blog.title,
         content: blog.content,
         img: blog.img,
-        like: blog.like,
+        like: blog.like.length,
         isliked: blog.like.map(id => id.toString()).includes(req.user?.id),
         comment: blog.comment.length,
         createdAt: blog.createdAt,
@@ -561,10 +561,10 @@ router.get("/user/:userid/follower", optionalAuth, async (req, res) => {
     const findFollower = req.params.userid
     const userFollower = await User.findById(findFollower).populate("follower", "username name profileimg")
 
-    let myFollowingList = []
+    let myFollowerList = []
     if (req.user) {
       const currentUser = await User.findById(req.user.id).select("follower")
-      myFollowingList = currentUser.following.map(id => id.toString())
+      myFollowerList = currentUser.follower.map(id => id.toString())
     }
 
     const followers = userFollower.follower.map(f => ({
@@ -572,7 +572,7 @@ router.get("/user/:userid/follower", optionalAuth, async (req, res) => {
       username: f.username,
       name: f.name,
       profileimg: f.profileimg,
-      isfollowing: myFollowingList.includes(f._id.toString())
+      isfollowing: myFollowerList.includes(f._id.toString())
     }))
 
     res.status(200).json({ message: followers })

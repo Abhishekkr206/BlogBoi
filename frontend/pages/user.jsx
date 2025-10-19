@@ -18,6 +18,7 @@ export default function UserProfile() {
   const [unfollowUser] = useUnfollowUserMutation();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const navigate = useNavigate();
   const currentUserId = useSelector((state) => state.auth.user?._id);
@@ -42,30 +43,39 @@ useEffect(() => {
   }
 }, [data, page]);
 
-  if (isLoading && page === 1) return <Spinner />;
+  useEffect(() => {
+    if (data?.response) {
+      setIsFollowing(data.response.isfollowing || false);
+      setFollowerCount(user.followerCount || 0);
+      setFollowingCount(user.followingCount || 0);
+    }
+  }, [data]);
 
-  const user = data?.response;
+if (isLoading && page === 1) return <Spinner />;
+
+const user = data?.response;
   if (!user) return <p>User not found</p>;
 
-  const { username, name, profileimg, followingCount, bio } = user;
+  const { username, name, profileimg, bio } = user;
 
   const handleFollow = async () => {
     try {
       if (!isFollowing) {
         await followUser({ userid, currentUserId }).unwrap();
         setIsFollowing(true);
-        setFollowerCount((prev) => prev + 1);
       } else {
         await unfollowUser({ userid, currentUserId }).unwrap();
         setIsFollowing(false);
-        setFollowerCount((prev) => prev - 1);
       }
     } catch (err) {
       console.error("Follow/Unfollow failed:", err);
     }
   };
+  
 
   const fetchMore = () => setPage((prev) => prev + 1);
+
+  const isOwnProfile = currentUserId === userid;
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -96,12 +106,14 @@ useEffect(() => {
           </div>
         </div>
 
+      {!isOwnProfile && (
         <button
           className="px-4 py-2 text-lg text-center bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition"
           onClick={handleFollow}
         >
           {isFollowing ? "Unfollow" : "Follow"}
         </button>
+      )}
         <LogoutButton />
       </div>
 

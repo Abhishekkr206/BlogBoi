@@ -78,14 +78,14 @@ export default function PostSection() {
       if (post.isliked !== undefined) {
         setLiked(post.isliked);
       }
-      if (post.like !== undefined) {
-        setTotalLikes(Array.isArray(post.like) ? post.like.length : post.like);
-      }
+      // Only set totalLikes once (first render), not every post update
+      setTotalLikes((prev) => (prev === 0 ? post.like : prev));
       if (post.isfollowing !== undefined) {
         setFollowing(post.isfollowing);
       }
     }
   }, [post]);
+
 
   const fetchMore = () => {
     setPage((prev) => prev + 1);
@@ -141,18 +141,16 @@ export default function PostSection() {
     }
   };
 
-  const handleLike = async () => {
+  const handleLike = async (e) => {
+    e.preventDefault()
     try {
       if (liked) {
         await deleteLike({ authorId, postid }).unwrap();
-        setLiked(false);
-        setTotalLikes((prev) => prev - 1);
+        showError("Post disliked successfully!");
       } else {
         await likePost({ authorId, postid }).unwrap();
-        setLiked(true);
-        setTotalLikes((prev) => prev + 1);
+
         showMessage("Post liked successfully!");
-        showError("Post liked successfully!");
       }
     } catch (err) {
       console.error("Like action failed:", err);
