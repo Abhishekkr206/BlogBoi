@@ -9,6 +9,7 @@ import { useGetCommentsQuery, useAddCommentMutation } from "../features/comment/
 import { useFollowUserMutation, useUnfollowUserMutation } from "../features/user/userApi";
 import { useSelector } from "react-redux";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useToast } from "../components/Toast";
 
 export default function PostSection() {
   const { postid } = useParams();
@@ -19,6 +20,7 @@ export default function PostSection() {
   const [deleteLike] = useDeleteLikeMutation();
   const [followUser] = useFollowUserMutation();
   const [unfollowUser] = useUnfollowUserMutation();
+  const { showError, showMessage } = useToast();
 
   // Pagination states for comments
   const [page, setPage] = useState(1);
@@ -149,6 +151,8 @@ export default function PostSection() {
         await likePost({ authorId, postid }).unwrap();
         setLiked(true);
         setTotalLikes((prev) => prev + 1);
+        showMessage("Post liked successfully!");
+        showError("Post liked successfully!");
       }
     } catch (err) {
       console.error("Like action failed:", err);

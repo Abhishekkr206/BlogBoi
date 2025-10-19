@@ -4,7 +4,7 @@ export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getUserData: builder.query({
       query: ({userid, page}) => (`blog/user/${userid}?page=${page}&limit=5`),
-      providesTags: (result, error, userid) => [{ type: "User", id: userid }],
+      providesTags: (result, error, {userid}) => [{ type: "User", id: userid }],
     }),
 
     getFollowingData: builder.query({
@@ -23,7 +23,7 @@ export const userApi = api.injectEndpoints({
         method:"PATCH",
         body,
       }),
-      invalidatesTags: (result, error, userid) => [{type:'User', id:userid}],
+      invalidatesTags: (result, error, {userid}) => [{type:'User', id:userid}],
     }),
 
     followUser: builder.mutation({
