@@ -122,10 +122,10 @@ export default function PostCard({data}) {
                 className="flex items-center gap-2 hover:underline cursor-pointer"
                 onClick={handleRedirect}
               >
-                <img src={author.profileimg || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"}
-                     alt={author.username}
+                <img src={author?.profileimg || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"}
+                     alt={author?.username}
                      className="w-10 h-10 rounded-full object-cover" />
-                <h4 className="font-semibold">{author.username}</h4>
+                <h4 className="font-semibold">{author?.username}</h4>
               </div>
               <span className="text-gray-500 text-sm">{new Date(createdAt).toLocaleString()}</span>
             </div>

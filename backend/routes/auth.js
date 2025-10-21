@@ -5,9 +5,12 @@ const auth = require("../models/user");
 const OTP = require("../models/OTP");
 const genrateOtp = require("../utils/generateOtp");
 const nodemailer = require("nodemailer");
+const { genrateAccessToken, genrateRefreshToken } = require("../utils/generateTokens");
 
 require("dotenv").config();
 const JWT_SECRET = process.env.JWT_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
@@ -20,6 +23,27 @@ const transport = nodemailer.createTransport({
     pass: process.env.PASS_USER,
   },
 });
+
+// Helper function to set both tokens in cookies
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  // Set access token cookie (short-lived)
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    sameSite: "Lax",
+    path: "/",
+  });
+
+  // Set refresh token cookie (long-lived)
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (more reasonable than 365 days)
+    sameSite: "Lax",
+    path: "/",
+  });
+};
 
 // Validate OTP and create user
 router.post("/validateotp", async (req, res) => {
@@ -36,29 +60,21 @@ router.post("/validateotp", async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // Check if user already exists
     const existingUser = await auth.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create new user
     const User = new auth({ username, name, email, password });
     await User.save();
 
-    // Delete used OTP
     await OTP.deleteOne({ email });
 
-    // Generate JWT
-    const token = jwt.sign({ id: User._id }, JWT_SECRET, { expiresIn: "1d" });
+    const accessToken = genrateAccessToken(User);
+    const refreshToken = genrateRefreshToken(User);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "Lax",
-      path: "/",
-    });
+    // Set both tokens in cookies
+    setAuthCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       message: "Signup success",
@@ -82,7 +98,6 @@ router.post("/google", async (req, res) => {
   const { token } = req.body;
 
   try {
-    // Verify Google token
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -90,20 +105,14 @@ router.post("/google", async (req, res) => {
 
     const { email, name, picture } = ticket.getPayload();
 
-    // Check if user exists
     let user = await auth.findOne({ email });
 
     if (user) {
-      // Existing user - login
-      const jwtToken = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1d" });
+      const accessToken = genrateAccessToken(user);
+      const refreshToken = genrateRefreshToken(user);
 
-      res.cookie("token", jwtToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: "Lax",
-        path: "/",
-      });
+      // Set both tokens in cookies
+      setAuthCookies(res, accessToken, refreshToken);
 
       res.status(200).json({
         message: "Login success",
@@ -117,13 +126,12 @@ router.post("/google", async (req, res) => {
         },
       });
     } else {
-      // New user - send data for username selection
       res.status(200).json({
         message: "New user, proceed to signup",
         user: {
           email,
           name,
-          picture ,
+          picture,
         },
       });
     }
@@ -137,7 +145,6 @@ router.post("/signup", async (req, res) => {
   const { username, name, email, password, google } = req.body;
 
   try {
-    // Handle Google signup completion
     if (google) {
       const existingUser = await auth.findOne({ $or: [{ email }, { username }] });
       if (existingUser) {
@@ -147,15 +154,11 @@ router.post("/signup", async (req, res) => {
       const User = new auth({ username, name, email, password: null });
       await User.save();
 
-      const token = jwt.sign({ id: User._id }, JWT_SECRET, { expiresIn: "1d" });
-
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: false,
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: "Lax",
-        path: "/"
-      });
+      const accessToken = genrateAccessToken(User);
+      const refreshToken = genrateRefreshToken(User);
+      
+      // Set both tokens in cookies
+      setAuthCookies(res, accessToken, refreshToken);
 
       return res.status(200).json({
         message: "Signup success",
@@ -170,89 +173,73 @@ router.post("/signup", async (req, res) => {
       });
     }
 
-    // Regular email/password signup - send OTP
     const userExists = await auth.findOne({ $or: [{ email }, { username }] });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const otp = genrateOtp();
-    
-    // Delete existing OTP
     await OTP.deleteOne({ email });
-    
-    // Create new OTP
     await OTP.create({ email, otp });
 
-    // Send email
-await transport.sendMail({
-  from: process.env.EMAIL_USER,
-  to: email,
-  subject: "Verify Your Email - OTP Code",
-  text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
-  html: `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
-        <tr>
-          <td align="center">
-            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
-              
-              <!-- Header -->
-              <tr>
-                <td style="background-color: #000000; padding: 30px; text-align: center;">
-                  <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Email Verification</h1>
-                </td>
-              </tr>
-              
-              <!-- Body -->
-              <tr>
-                <td style="padding: 40px 30px;">
-                  <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">Hello,</p>
-                  <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">Thank you for signing up! Please use the following OTP code to verify your email address:</p>
-                  
-                  <!-- OTP Box -->
-                  <table width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td align="center" style="padding: 20px 0;">
-                        <div style="background-color: #000000; border-radius: 8px; padding: 20px; display: inline-block;">
-                          <span style="color: #ffffff; font-size: 36px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otp}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
-                  
-                  <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 30px 0 0; text-align: center;">
-                    This code will expire in <strong style="color: #000000;">5 minutes</strong>
-                  </p>
-                  <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0; text-align: center;">
-                    If you didn't request this code, please ignore this email.
-                  </p>
-                </td>
-              </tr>
-              
-              <!-- Footer -->
-              <tr>
-                <td style="background-color: #f8f8f8; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                  <p style="color: #999999; font-size: 12px; margin: 0; line-height: 1.5;">
-                    This is an automated message, please do not reply to this email.
-                  </p>
-                </td>
-              </tr>
-              
-            </table>
-          </td>
-        </tr>
-      </table>
-    </body>
-    </html>
-  `
-});
+    await transport.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify Your Email - OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
+                  <tr>
+                    <td style="background-color: #000000; padding: 30px; text-align: center;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Email Verification</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">Hello,</p>
+                      <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">Thank you for signing up! Please use the following OTP code to verify your email address:</p>
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td align="center" style="padding: 20px 0;">
+                            <div style="background-color: #000000; border-radius: 8px; padding: 20px; display: inline-block;">
+                              <span style="color: #ffffff; font-size: 36px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otp}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 30px 0 0; text-align: center;">
+                        This code will expire in <strong style="color: #000000;">5 minutes</strong>
+                      </p>
+                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0; text-align: center;">
+                        If you didn't request this code, please ignore this email.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #f8f8f8; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #999999; font-size: 12px; margin: 0; line-height: 1.5;">
+                        This is an automated message, please do not reply to this email.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    });
 
     res.status(200).json({ message: "OTP sent successfully" });
 
@@ -280,15 +267,11 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: identifyuser._id }, JWT_SECRET, { expiresIn: "1d" });
+    const accessToken = genrateAccessToken(identifyuser);
+    const refreshToken = genrateRefreshToken(identifyuser);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: "Lax",
-      path: "/",
-    });
+    // Set both tokens in cookies
+    setAuthCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
       message: "Login success",
@@ -307,14 +290,60 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Refresh token endpoint - NEW!
+router.post("/refresh", async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token not found" });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+    
+    // Find user
+    const user = await auth.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Generate new tokens
+    const newAccessToken = genrateAccessToken(user);
+
+    // Set new tokens in cookies
+  res.cookie("accessToken", newAccessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 15 * 60 * 1000,
+    sameSite: "Lax",
+  });
+  
+  res.json({ message: "Access token refreshed" });
+  }
+  catch (err) {
+    console.error("Token refresh error:", err);
+    return res.status(401).json({ message: "Invalid refresh token" });
+  }
+});
+
 // Logout
 router.post("/logout", async (req, res) => {
-  res.clearCookie("token", {
+  // Clear both cookies
+  res.clearCookie("accessToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "Lax",
     path: "/",
   });
+  
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Lax",
+    path: "/",
+  });
+  
   res.status(200).json({ message: "Logged out successfully" });
 });
 
