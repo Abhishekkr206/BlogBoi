@@ -145,9 +145,13 @@ export default function PostSection() {
     e.preventDefault()
     try {
       if (liked) {
+        setTotalLikes(prev => prev - 1);
+        setLiked(false);
         await deleteLike({ authorId, postid }).unwrap();
         showError("Post disliked successfully!");
       } else {
+        setTotalLikes(prev => prev + 1);
+        setLiked(true);
         await likePost({ authorId, postid }).unwrap();
 
         showMessage("Post liked successfully!");
