@@ -3,6 +3,7 @@ const { Auth, optionalAuth } = require("../middleware/authMiddleware")
 const User = require("../models/user")
 const Userpost = require("../models/post")
 const Comment = require("../models/comment")
+const redisClient = require("../config/redis")
 
 // File upload
 const fs = require("fs")
@@ -34,6 +35,13 @@ router.post("/post", Auth, upload.single("img"), async (req, res) => {
       author: req.user.id
     })
     await blog.save()
+
+    // Clear user's posts cache
+    const keys = await redisClient.keys(`user:${req.user.id}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+
     res.status(200).json({ message: "Blog submited" })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -64,9 +72,8 @@ router.get("/post", optionalAuth, async (req, res) => {
         }
       },
       { $sort: { engagementScore: -1 } },
-      { $limit: limit * page } // fetch enough for pagination
+      { $limit: limit * page }
     ])
-
 
     const trendingIds = trending.map(p => p._id)
 
@@ -112,21 +119,29 @@ router.get("/post", optionalAuth, async (req, res) => {
   }
 })
 
-
 // Get a specific post with full details + comments
 router.get("/post/:postid", optionalAuth, async (req, res) => {
   try {
     const postid = req.params.postid
     const currentUserId = req.user?.id?.toString()
 
-    const blog = await Userpost.findById(postid).populate("author", "username profileimg follower")
-
-    if (!blog) {
-      return res.status(404).json({ message: "Post not found" })
+    const cached = await redisClient.get(`post:${postid}`)
+    
+    let blog
+    if(cached){
+      blog = JSON.parse(cached)
     }
-
+    else{
+      blog = await Userpost.findById(postid).populate("author", "username profileimg follower")
+      if(!blog){
+        return res.status(404).json({ message: "Post not found" })
+      }
+      // Cache the blog data (without user-specific fields)
+      await redisClient.setEx(`post:${postid}`, 300, JSON.stringify(blog))
+    }
+    
     const followers = blog.author.follower || []
-
+    
     const userBlogs = {
       _id: blog._id,
       author: blog.author,
@@ -138,9 +153,8 @@ router.get("/post/:postid", optionalAuth, async (req, res) => {
       isliked: currentUserId ? blog.like.map(id => id.toString()).includes(currentUserId) : false,
       comment: blog.comment,
       createdAt: blog.createdAt,
-      updatedAt: blog.updatedAt
     }
-
+    
     res.status(200).json({ message: userBlogs })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -152,7 +166,19 @@ router.post("/post/:postid/like", Auth, async (req, res) => {
   try {
     const postid = req.params.postid
     const userid = req.user.id
+    
     await Userpost.findByIdAndUpdate(postid, { $addToSet: { like: userid } })
+
+    // Clear single post cache
+    await redisClient.del(`post:${postid}`)
+
+    // Clear post author's posts cache
+    const postAuthor = await Userpost.findById(postid).select('author')
+    const keys = await redisClient.keys(`user:${postAuthor.author}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+
     res.status(200).json({ message: "Your like added" })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -171,6 +197,17 @@ router.delete("/post/:postid/unlike", Auth, async (req, res) => {
     }
 
     await Userpost.findByIdAndUpdate(postid, { $pull: { like: userid } })
+
+    // Clear single post cache
+    await redisClient.del(`post:${postid}`)
+
+    // Clear post author's posts cache
+    const postAuthor = await Userpost.findById(postid).select('author')
+    const keys = await redisClient.keys(`user:${postAuthor.author}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+
     res.status(200).json({ message: "unlike" })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -192,7 +229,6 @@ router.delete("/post/:postid", Auth, async (req, res) => {
 
     // Delete image from Cloudinary if it exists
     if (post.img) {
-      // Extract public_id from the Cloudinary URL
       const urlParts = post.img.split('/')
       const filename = urlParts[urlParts.length - 1]
       const publicId = `blogBoi/${filename.split('.')[0]}`
@@ -202,6 +238,15 @@ router.delete("/post/:postid", Auth, async (req, res) => {
 
     // Delete the post from database
     await Userpost.deleteOne({ _id: postid, author: userid })
+
+    // Clear user's posts cache
+    const keys = await redisClient.keys(`user:${userid}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+    
+    // Clear single post cache
+    await redisClient.del(`post:${postid}`)
 
     res.status(200).json({ message: "your post deleted" })
   } catch (err) {
@@ -216,13 +261,23 @@ router.delete("/post/:postid", Auth, async (req, res) => {
 // Add a comment to a post
 router.post("/comment/:postid", Auth, async (req, res) => {
   try {
-    const post = req.params.postid
+    const postId = req.params.postid
     const author = req.user.id
     const { content } = req.body
 
-    const newComment = new Comment({ post, author, content })
+    const newComment = new Comment({ post: postId, author, content })
     const savedComment = await newComment.save()
-    await Userpost.findByIdAndUpdate(post, { $push: { comment: savedComment._id } })
+    await Userpost.findByIdAndUpdate(postId, { $push: { comment: savedComment._id } })
+
+    // Clear post author's posts cache
+    const postAuthor = await Userpost.findById(postId).select('author')
+    const keys = await redisClient.keys(`user:${postAuthor.author}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+    
+    // Clear single post cache
+    await redisClient.del(`post:${postId}`)
 
     res.status(200).json({ message: "comment added " })
   } catch (err) {
@@ -239,13 +294,11 @@ router.get("/comment/:postid", async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    // Count total comments for this post
     const totalComments = await Comment.countDocuments({ post: postid });
 
-    // Find comments by post reference
     const comments = await Comment.find({ post: postid })
       .populate("author", "username profileimg")
-      .sort({ createdAt: -1 }) // Newest first
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
@@ -257,6 +310,7 @@ router.get("/comment/:postid", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 // Delete a comment
 router.delete("/comment/:commentid", Auth, async (req, res) => {
   try {
@@ -272,8 +326,20 @@ router.delete("/comment/:commentid", Auth, async (req, res) => {
       return res.status(404).json({ message: "Not authorized to delete this comment" })
     }
 
+    const postid = comment.post  // Get post ID before deletion
+
     await Comment.deleteOne({ _id: commentid, author: userid })
-    await Userpost.findByIdAndUpdate(comment.post, { $pull: { comment: commentid } })
+    await Userpost.findByIdAndUpdate(postid, { $pull: { comment: commentid } })
+
+    // Clear post author's posts cache
+    const postAuthor = await Userpost.findById(postid).select('author')
+    const keys = await redisClient.keys(`user:${postAuthor.author}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+    
+    // Clear single post cache
+    await redisClient.del(`post:${postid}`)
 
     res.status(200).json({ message: "your comment deleted" })
   } catch (err) {
@@ -314,7 +380,6 @@ router.get("/comment/:commentid/reply", async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    // First, get the comment to check how many replies it has
     const comment = await Comment.findById(commentId).select('reply');
     
     if (!comment) {
@@ -323,7 +388,6 @@ router.get("/comment/:commentid/reply", async (req, res) => {
 
     const totalReplies = comment.reply?.length || 0;
 
-    // Now populate the replies with pagination
     const commentWithReplies = await Comment.findById(commentId)
       .populate({
         path: "reply",
@@ -383,10 +447,32 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
 
-    const totalPosts = await Userpost.countDocuments({ author: userid });
-    const userblog = await Userpost.find({ author: userid }).sort({createdAt: -1}).skip(skip).limit(limit)
+    const postCachedKey = `user:${userid}:posts:page:${page}`
+    const userCachedKey = `user:${userid}:profile`
 
-    const user = await User.findById({ _id: userid })
+    const cachedPosts = await redisClient.get(postCachedKey)
+    let userblog
+    let totalPosts 
+    if(cachedPosts){
+      const blog = JSON.parse(cachedPosts)
+      userblog = blog.userblog
+      totalPosts = blog.totalPosts
+    }
+    else{
+      userblog = await Userpost.find({ author: userid }).sort({createdAt: -1}).skip(skip).limit(limit)
+      totalPosts = await Userpost.countDocuments({ author: userid })
+      await redisClient.setEx(postCachedKey, 300, JSON.stringify({userblog, totalPosts}))
+    }
+    
+    const cachedUser = await redisClient.get(userCachedKey)
+    let user
+    if(cachedUser){
+      user = JSON.parse(cachedUser)
+    }
+    else{
+      user = await User.findById({ _id: userid })
+      await redisClient.setEx(userCachedKey, 300, JSON.stringify(user))
+    }
 
     const followers = user.follower || []
     const following = user.following || []
@@ -398,8 +484,6 @@ router.get("/user/:userid", optionalAuth, async (req, res) => {
       bio:user.bio,
       profileimg: user.profileimg,
       email: user.email,
-      followers: followers,
-      following: following,
       followerCount: user.follower.length,
       followingCount: user.following.length,
       isfollowing: req.user ? followers.map(id => id.toString()).includes(req.user.id) : false,
@@ -434,7 +518,6 @@ router.patch("/user/edit", Auth, upload.single("profileimg"), async (req, res) =
     const userid = req.user.id
     const { name, bio } = req.body
 
-    // Fetch current user
     const currentUser = await User.findById(userid)
     if (!currentUser) {
       return res.status(404).json({ message: "User not found" })
@@ -442,40 +525,42 @@ router.patch("/user/edit", Auth, upload.single("profileimg"), async (req, res) =
 
     const updatedData = {}
     
-    // Handle text fields first
     if (name) updatedData.name = name
     if (bio) updatedData.bio = bio
 
-    // Handle image upload
     if (req.file) {
-      // Delete old image if exists
       if (currentUser.profileimg) {
         try {
           const urlParts = currentUser.profileimg.split('/')
           const filename = urlParts[urlParts.length - 1]
           const publicId = `blogBoiUserInfo/${filename.split('.')[0]}`
           await cloudinary.uploader.destroy(publicId)
-          console.log("Old image deleted:", publicId)
         } catch (deleteErr) {
           console.log("Error deleting old image:", deleteErr)
         }
       }
 
-      // Upload new image
       const result = await cloudinary.uploader.upload(req.file.path, { 
         folder: "blogBoiUserInfo" 
       })
-      fs.unlinkSync(req.file.path) // Delete temp file
+      fs.unlinkSync(req.file.path)
       updatedData.profileimg = result.secure_url
-      console.log("New image uploaded:", result.secure_url)
     }
 
-    // Update user
     const updatedUser = await User.findByIdAndUpdate(
       userid, 
       updatedData, 
       { new: true, runValidators: true }
     )
+
+    // Clear user's posts cache
+    const keys = await redisClient.keys(`user:${userid}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+
+    // Clear user's profile cache
+    await redisClient.del(`user:${userid}:profile`)
 
     res.status(200).json({ 
       message: "Profile updated successfully", 
@@ -488,7 +573,7 @@ router.patch("/user/edit", Auth, upload.single("profileimg"), async (req, res) =
       }
     })
 
-  }catch(err){
+  }catch(err) {
     console.error("Update error:", err)
     res.status(500).json({ message: err.message })
   }
@@ -502,6 +587,17 @@ router.post("/user/:userid/follow", Auth, async (req, res) => {
 
     await User.findByIdAndUpdate(userid, { $addToSet: { following: followingid } })
     await User.findByIdAndUpdate(followingid, { $addToSet: { follower: userid } })
+
+    // Clear both users' profile cache
+    await redisClient.del(`user:${userid}:profile`)
+    await redisClient.del(`user:${followingid}:profile`)
+
+    // Clear all posts by the followed user (because isfollowing changed)
+    const userPosts = await Userpost.find({ author: followingid }).select('_id')
+    const postKeys = userPosts.map(post => `post:${post._id}`)
+    if (postKeys.length > 0) {
+      await redisClient.del(postKeys)
+    }
 
     res.status(200).json({ message: "follow" })
   } catch (err) {
@@ -522,6 +618,17 @@ router.delete("/user/:userid/unfollow", Auth, async (req, res) => {
 
     await User.findByIdAndUpdate(userid, { $pull: { following: unfollowUser } })
     await User.findByIdAndUpdate(unfollowUser, { $pull: { follower: userid } })
+
+    // Clear both users' profile cache
+    await redisClient.del(`user:${userid}:profile`)
+    await redisClient.del(`user:${unfollowUser}:profile`)
+
+    // Clear all posts by the unfollowed user (because isfollowing changed)
+    const userPosts = await Userpost.find({ author: unfollowUser }).select('_id')
+    const postKeys = userPosts.map(post => `post:${post._id}`)
+    if (postKeys.length > 0) {
+      await redisClient.del(postKeys)
+    }
 
     res.status(200).json({ message: "unfollow" })
   } catch (err) {

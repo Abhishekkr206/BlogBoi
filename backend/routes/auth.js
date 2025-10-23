@@ -29,7 +29,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
   // Set access token cookie (short-lived)
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: "production",
     maxAge: 15 * 60 * 1000, // 15 minutes
     sameSite: "Lax",
     path: "/",
@@ -38,7 +38,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
   // Set refresh token cookie (long-lived)
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: "production",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (more reasonable than 365 days)
     sameSite: "Lax",
     path: "/",

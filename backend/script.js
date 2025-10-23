@@ -8,6 +8,7 @@ const cookieParser =require("cookie-parser")
 const authRoute = require("./routes/auth")
 const blogRoute = require("./routes/post")
 
+require('./config/redis');
 require("dotenv").config();
 
 const app = express()
