@@ -688,4 +688,13 @@ router.get("/user/:userid/follower", optionalAuth, async (req, res) => {
   }
 })
 
+// Health check route
+
+router.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date() 
+  });
+});
+
 module.exports = router
