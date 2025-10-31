@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useLikePostMutation, useDeleteLikeMutation, useDeletePostMutation} from "../features/post/postApi";
 import { useState, useEffect } from "react";
+import { useToast } from "../components/Toast";
 
 export default function PostCard({data}) {
 
@@ -35,6 +36,7 @@ export default function PostCard({data}) {
   const [totalLikes, setTotalLikes] = useState(like)
   const [liked, setLiked] = useState(isliked);
   const [commentCount, setCommentCount] = useState(comment);
+  const { showError, showMessage } = useToast();
 
   useEffect(() => {
     setTotalLikes(like);
@@ -52,15 +54,18 @@ export default function PostCard({data}) {
         setLiked(true);
 
         await likePost({authorId, postid}).unwrap()
+        showMessage("Post liked!")
       } else {
         setTotalLikes(prev => prev - 1);
         setLiked(false);
 
         await deleteLike({authorId, postid}).unwrap()
+        showError("Like removed!")
       }
     }
     catch(err){
       console.log(err)
+      showError("An error occurred. Please try again.")
     }
   } 
   
@@ -92,9 +97,11 @@ export default function PostCard({data}) {
     try{
       await deletePost({authorId, postid:_id}).unwrap()
       console.log("✅ Post deleted successfully");
+      showError("Post deleted successfully");
     }
     catch(err){
       console.log("❌ Delete error:", err)
+      showError("Failed to delete post. Please try again.");
     }
   }
 

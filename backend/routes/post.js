@@ -229,11 +229,35 @@ router.delete("/post/:postid", Auth, async (req, res) => {
 
     // Delete image from Cloudinary if it exists
     if (post.img) {
-      const urlParts = post.img.split('/')
-      const filename = urlParts[urlParts.length - 1]
-      const publicId = `blogBoi/${filename.split('.')[0]}`
-      
-      await cloudinary.uploader.destroy(publicId)
+      try {
+        // Extract public_id from Cloudinary URL
+        // Example URL: https://res.cloudinary.com/dvfhiel9s/image/upload/v1760387662/blogBoi/cxkcdiavnukjrpvoulos.jpg
+        const imageUrl = post.img
+        
+        // Split by '/' and find 'upload' segment
+        const urlSegments = imageUrl.split('/')
+        const uploadIndex = urlSegments.indexOf('upload')
+        
+        if (uploadIndex !== -1 && uploadIndex < urlSegments.length - 2) {
+          // Skip the version (v1760387662) and get folder/filename
+          // Join everything after the version: ['blogBoi', 'cxkcdiavnukjrpvoulos.jpg']
+          const pathSegments = urlSegments.slice(uploadIndex + 2)
+          
+          // Join with '/' and remove extension: 'blogBoi/cxkcdiavnukjrpvoulos'
+          const fullPath = pathSegments.join('/')
+          const publicId = fullPath.replace(/\.[^/.]+$/, '') // Remove file extension
+          
+          console.log('Attempting to delete Cloudinary image:', publicId)
+          const result = await cloudinary.uploader.destroy(publicId)
+          console.log('Cloudinary deletion result:', result)
+        } else {
+          console.log('Could not parse Cloudinary URL structure:', post.img)
+        }
+      } catch (cloudinaryError) {
+        // Log the error but don't fail the whole operation
+        console.error('Error deleting image from Cloudinary:', cloudinaryError)
+        // Continue with post deletion even if image deletion fails
+      }
     }
 
     // Delete the post from database
@@ -250,6 +274,7 @@ router.delete("/post/:postid", Auth, async (req, res) => {
 
     res.status(200).json({ message: "your post deleted" })
   } catch (err) {
+    console.error('Delete post error:', err)
     res.status(500).json({ message: err.message })
   }
 })

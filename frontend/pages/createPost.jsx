@@ -2,16 +2,21 @@ import { useState, useRef } from "react";
 import { Image, X } from "lucide-react";
 import { useAddPostMutation } from "../features/post/postApi";
 import TextEditor from "../components/TextEditor";
+import { useSelector } from "react-redux";
+import { useToast } from "../components/Toast";
 
 export default function CreatePost() {
   const [addPost] = useAddPostMutation();
   const editorRef = useRef(null);
-
+  
   const [postData, setPostData] = useState({
     img: null,
     title: "",
     content: ""
   });
+  const { showError, showMessage } = useToast();
+  
+  const currentUserId = useSelector((state) => state.auth.user?._id);
 
   const handleChanges = (e) => {
     if (e.target.name === "img" && e.target.files?.[0]) {
@@ -35,7 +40,7 @@ export default function CreatePost() {
         formData.append("img", postData.img);
       }
 
-      await addPost(formData).unwrap();
+      await addPost({body:formData, authorId:currentUserId}).unwrap();
 
       console.log("Post created successfully");
 
@@ -44,8 +49,10 @@ export default function CreatePost() {
       if (editorRef.current) {
         editorRef.current.clearContent();
       }
+      showMessage("Post created successfully");
     } catch (err) {
       console.log(err);
+      showError("Failed to create post. Please try again.");
     }
   };
 
