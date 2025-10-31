@@ -136,8 +136,10 @@ export default function PostSection() {
 
       console.log("Comment added:", res);
       setFormData({ ...formData, content: "" });
+      showMessage("Comment added successfully!");
     } catch (err) {
       console.error("Comment failed:", err);
+      showError("Failed to add comment. Please try again.");
     }
   };
 
@@ -171,12 +173,15 @@ export default function PostSection() {
       if (following) {
         await unfollowUser({ userid: authorId, currentUserId }).unwrap();
         setFollowing(false);
+        showError("Unfollowed successfully");
       } else {
         await followUser({ userid: authorId, currentUserId }).unwrap();
         setFollowing(true);
+        showMessage("Followed successfully");
       }
     } catch (err) {
       console.error("Follow action failed:", err);
+      showError("Action failed. Please try again.");
     }
   };
 

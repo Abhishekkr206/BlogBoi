@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeleteCommentMutation, useGetRepliesQuery, useAddReplyMutation, useDeleteReplyMutation } from "../features/comment/commentApi";
 import { Trash2 } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useToast } from "../components/Toast";
 
 export default function CommentCard({ comments }) {
   const [showReplies, setShowReplies] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [page, setPage] = useState(1);
   const [allReplies, setAllReplies] = useState([]);
+  const { showError, showMessage } = useToast();
 
   const { data: replyData, isLoading } = useGetRepliesQuery(
     { commentId: comments._id, page },
@@ -59,8 +61,10 @@ export default function CommentCard({ comments }) {
     if (user?._id !== author?._id) return;
     try {
       await deleteComment({ authorId: author._id, postId: post, commentId: _id }).unwrap();
+      showError("Comment deleted successfully");
     } catch (err) {
       console.error("Delete comment failed:", err);
+      showError("Failed to delete comment. Please try again.");
     }
   };
 
@@ -76,8 +80,10 @@ export default function CommentCard({ comments }) {
       }).unwrap();
       setReplyText("");
       setPage(1); // Reset to first page to see new reply
+      showMessage("Reply added successfully");
     } catch (err) {
       console.error("Add reply failed:", err);
+      showError("Failed to add reply. Please try again.");
     }
   };
 
@@ -88,8 +94,10 @@ export default function CommentCard({ comments }) {
         replyId,
         postId: post,
       }).unwrap();
+      showError("Reply deleted successfully");
     } catch (err) {
       console.error("Delete reply failed:", err);
+      showError("Failed to delete reply. Please try again.");
     }
   };
 

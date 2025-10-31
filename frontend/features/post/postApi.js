@@ -26,12 +26,15 @@ export const postApi = api.injectEndpoints({
         }),
         
         addPost: builder.mutation({
-            query: (body)=>({
+            query: ({body, authorId})=>({
                 url:"blog/post",
                 method:"POST",
                 body,
             }),
-            invalidatesTags:[{type:"Post", id:"LIST"}],
+            invalidatesTags: (result, error, { authorId }) => [
+                { type: "Post", id: "LIST" },
+                { type: "User", id: authorId },
+            ]
         }),
 
         likePost: builder.mutation({
@@ -161,6 +164,42 @@ export const postApi = api.injectEndpoints({
                 url:`blog/post/${postid}`,
                 method:"DELETE",
             }),
+            async onQueryStarted({ postid, authorId }, { dispatch, queryFulfilled }) {
+                const patches = [];
+
+                // Update getPosts cache - remove post from all pages
+                for (let page = 1; page <= 30; page++) {
+                    patches.push(
+                        dispatch(
+                            postApi.util.updateQueryData('getPosts', { page }, (draft) => {
+                                if (draft?.message) {
+                                    draft.message = draft.message.filter(p => p._id !== postid);
+                                }
+                            })
+                        )
+                    );
+                }
+            
+                // Update getUserData cache - remove post from user's profile
+                for (let page = 1; page <= 10; page++) {
+                    patches.push(
+                        dispatch(
+                            postApi.util.updateQueryData('getUserData', { userid: authorId, page }, (draft) => {
+                                if (draft?.response?.blogs) {
+                                    draft.response.blogs = draft.response.blogs.filter(p => p._id !== postid);
+                                }
+                            })
+                        )
+                    );
+                }
+            
+                try {
+                    await queryFulfilled;
+                } catch {
+                    // Rollback all patches on error
+                    patches.forEach(patch => patch.undo());
+                }
+            },
             invalidatesTags: (result, error, { postid, authorId }) => [
                 { type: "Post", id: postid }, 
                 { type: "Post", id: "LIST" },

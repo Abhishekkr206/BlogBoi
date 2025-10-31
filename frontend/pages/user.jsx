@@ -6,6 +6,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { LoaderOne as Spinner } from "../components/spinner";
 import PostCard from "../components/postCard";
 import LogoutButton from "../components/auth/logout";
+import { useToast } from "../components/Toast";
 
 export default function UserProfile() {
   const { userid } = useParams();
@@ -19,6 +20,7 @@ export default function UserProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const { showError, showMessage } = useToast();
 
   const navigate = useNavigate();
   const currentUserId = useSelector((state) => state.auth.user?._id);
@@ -63,12 +65,15 @@ const user = data?.response;
       if (!isFollowing) {
         await followUser({ userid, currentUserId }).unwrap();
         setIsFollowing(true);
+        showMessage("Followed successfully");
       } else {
         await unfollowUser({ userid, currentUserId }).unwrap();
         setIsFollowing(false);
+        showMessage("Unfollowed successfully");
       }
     } catch (err) {
       console.error("Follow/Unfollow failed:", err);
+      showError("Action failed. Please try again.");
     }
   };
   
