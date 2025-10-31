@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 body {
   --dot-bg: white;
   --dot-color: black;
