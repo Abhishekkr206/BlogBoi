@@ -6,6 +6,7 @@ const OTP = require("../models/OTP");
 const genrateOtp = require("../utils/generateOtp");
 const nodemailer = require("nodemailer");
 const { genrateAccessToken, genrateRefreshToken } = require("../utils/generateTokens");
+const cloudinary = require("cloudinary").v2;
 
 require("dotenv").config();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -24,22 +25,33 @@ const transport = nodemailer.createTransport({
   },
 });
 
+// Helper function to upload Google image URL to Cloudinary
+const uploadGoogleImageToCloudinary = async (imageUrl) => {
+  try {
+    const result = await cloudinary.uploader.upload(imageUrl, {
+      folder: "blogBoiUserInfo"
+    });
+    return result.secure_url;
+  } catch (error) {
+    console.error("Error uploading Google image to Cloudinary:", error);
+    return imageUrl; // Fallback to original Google URL if upload fails
+  }
+};
+
 // Helper function to set both tokens in cookies
 const setAuthCookies = (res, accessToken, refreshToken) => {
-  // Set access token cookie (short-lived)
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: "production",
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 15 * 60 * 1000,
     sameSite: "Lax",
     path: "/",
   });
 
-  // Set refresh token cookie (long-lived)
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: "production",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (more reasonable than 365 days)
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     sameSite: "Lax",
     path: "/",
   });
@@ -73,7 +85,6 @@ router.post("/validateotp", async (req, res) => {
     const accessToken = genrateAccessToken(User);
     const refreshToken = genrateRefreshToken(User);
 
-    // Set both tokens in cookies
     setAuthCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
@@ -111,7 +122,6 @@ router.post("/google", async (req, res) => {
       const accessToken = genrateAccessToken(user);
       const refreshToken = genrateRefreshToken(user);
 
-      // Set both tokens in cookies
       setAuthCookies(res, accessToken, refreshToken);
 
       res.status(200).json({
@@ -142,7 +152,7 @@ router.post("/google", async (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-  const { username, name, email, password, google } = req.body;
+  const { username, name, email, password, google, profileimg } = req.body;
 
   try {
     if (google) {
@@ -151,13 +161,24 @@ router.post("/signup", async (req, res) => {
         return res.status(400).json({ message: "User already exists" });
       }
 
-      const User = new auth({ username, name, email, password: null });
+      // Upload Google profile image to Cloudinary (same folder as edit profile)
+      let cloudinaryUrl = null;
+      if (profileimg) {
+        cloudinaryUrl = await uploadGoogleImageToCloudinary(profileimg);
+      }
+
+      const User = new auth({
+        profileimg: cloudinaryUrl,
+        username,
+        name,
+        email,
+        password: null
+      });
       await User.save();
 
       const accessToken = genrateAccessToken(User);
       const refreshToken = genrateRefreshToken(User);
       
-      // Set both tokens in cookies
       setAuthCookies(res, accessToken, refreshToken);
 
       return res.status(200).json({
@@ -270,7 +291,6 @@ router.post("/login", async (req, res) => {
     const accessToken = genrateAccessToken(identifyuser);
     const refreshToken = genrateRefreshToken(identifyuser);
 
-    // Set both tokens in cookies
     setAuthCookies(res, accessToken, refreshToken);
 
     res.status(200).json({
@@ -290,7 +310,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Refresh token endpoint - NEW!
+// Refresh token endpoint
 router.post("/refresh", async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
@@ -299,29 +319,24 @@ router.post("/refresh", async (req, res) => {
       return res.status(401).json({ message: "Refresh token not found" });
     }
 
-    // Verify refresh token
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
     
-    // Find user
     const user = await auth.findById(decoded.id);
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    // Generate new tokens
     const newAccessToken = genrateAccessToken(user);
 
-    // Set new tokens in cookies
-  res.cookie("accessToken", newAccessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 15 * 60 * 1000,
-    sameSite: "Lax",
-  });
-  
-  res.json({ message: "Access token refreshed" });
-  }
-  catch (err) {
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 15 * 60 * 1000,
+      sameSite: "Lax",
+    });
+    
+    res.json({ message: "Access token refreshed" });
+  } catch (err) {
     console.error("Token refresh error:", err);
     return res.status(401).json({ message: "Invalid refresh token" });
   }
@@ -329,7 +344,6 @@ router.post("/refresh", async (req, res) => {
 
 // Logout
 router.post("/logout", async (req, res) => {
-  // Clear both cookies
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

@@ -14,6 +14,7 @@ export default function SignupForm() {
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
+    profileimg: "",
     username: "",
     email: "",
     firstName: "",
@@ -42,7 +43,8 @@ export default function SignupForm() {
           email: res.user.email,
           firstName: res.user.name.split(' ')[0] || '',
           lastName: res.user.name.split(' ').slice(1).join(' ') || '',
-          password: '' // No password needed for Google
+          password: '' ,// No password needed for Google
+          profileimg: res.user.picture || null
         }));
         setIsGoogleSignup(true);
       }
@@ -57,6 +59,7 @@ export default function SignupForm() {
 
     try {
       const res = await signup({
+        profileimg: formData.profileimg,
         username: formData.username,
         name: `${formData.firstName} ${formData.lastName}`.trim(),
         email: formData.email,
