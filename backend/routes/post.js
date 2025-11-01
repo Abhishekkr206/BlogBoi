@@ -263,6 +263,9 @@ router.delete("/post/:postid", Auth, async (req, res) => {
     // Delete the post from database
     await Userpost.deleteOne({ _id: postid, author: userid })
 
+    // delete all comments and replies linked to this post
+    await Comment.deleteMany({post: postid, author: userid})
+
     // Clear user's posts cache
     const keys = await redisClient.keys(`user:${userid}:posts:page:*`)
     if (keys.length > 0) {
@@ -319,9 +322,9 @@ router.get("/comment/:postid", async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const totalComments = await Comment.countDocuments({ post: postid });
+    const totalComments = await Comment.countDocuments({ post: postid, parentComment: null });
 
-    const comments = await Comment.find({ post: postid })
+    const comments = await Comment.find({ post: postid, parentComment: null })
       .populate("author", "username profileimg")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -354,6 +357,9 @@ router.delete("/comment/:commentid", Auth, async (req, res) => {
     const postid = comment.post  // Get post ID before deletion
 
     await Comment.deleteOne({ _id: commentid, author: userid })
+
+    await Comment.deleteMany({parentComment: commentid})
+
     await Userpost.findByIdAndUpdate(postid, { $pull: { comment: commentid } })
 
     // Clear post author's posts cache
@@ -362,6 +368,7 @@ router.delete("/comment/:commentid", Auth, async (req, res) => {
     if (keys.length > 0) {
       await redisClient.del(keys)
     }
+    
     
     // Clear single post cache
     await redisClient.del(`post:${postid}`)
@@ -377,16 +384,17 @@ router.delete("/comment/:commentid", Auth, async (req, res) => {
 // ============================================================
 
 // Add reply to a comment
-router.post("/comment/:commentid/reply", Auth, async (req, res) => {
+router.post("/:postid/comment/:commentid/reply", Auth, async (req, res) => {
   try {
     const { content } = req.body
     const author = req.user.id
     const commentid = req.params.commentid
+    const postid = req.params.postid
 
-    const postid = await Comment.findById(commentid)
-    if (!postid) return res.status(404).json({ message: "Parent comment not found" })
+    const test = await Comment.findById(commentid)
+    if (!test) return res.status(404).json({ message: "Parent comment not found" })
 
-    const reply = new Comment({ post: commentid, author, content, reply: [] })
+    const reply = new Comment({ post: postid, author, content, reply: [], parentComment: commentid })
     const savedReply = await reply.save()
     await Comment.findOneAndUpdate({ _id: commentid }, { $push: { reply: savedReply._id } })
 

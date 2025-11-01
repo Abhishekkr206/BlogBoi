@@ -124,14 +124,14 @@ export const commentApi = api.injectEndpoints({
 
     // ✅ Add a reply to a comment
     addReply: builder.mutation({
-      query: ({ commentId, content, postId }) => ({
-        url: `blog/comment/${commentId}/reply`,
+      query: ({ commentid, content, postid }) => ({
+        url: `blog/${postid}/comment/${commentid}/reply`,
         method: "POST",
         body: { content },
       }),
-      invalidatesTags: (result, error, { commentId }) => [
-        { type: "Comment", id: commentId },
-        { type: "Reply", id: `LIST-${commentId}` }, 
+      invalidatesTags: (result, error, { commentid }) => [
+        { type: "Comment", id: commentid },
+        { type: "Reply", id: `LIST-${commentid}` }, 
       ],
     }),
 

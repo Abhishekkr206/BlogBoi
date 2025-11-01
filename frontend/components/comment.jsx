@@ -74,9 +74,9 @@ export default function CommentCard({ comments }) {
 
     try {
       await addReply({
-        commentId: _id,
+        commentid: _id,
         content: replyText,
-        postId: post,
+        postid: post,
       }).unwrap();
       setReplyText("");
       setPage(1); // Reset to first page to see new reply
@@ -106,7 +106,7 @@ export default function CommentCard({ comments }) {
   };
 
   return (
-    <div className="relative flex flex-col border border-gray-100 rounded-2xl p-5 shadow-sm bg-white hover:shadow-md transition-all duration-200 max-w-md">
+    <div className="relative flex flex-col border rounded-2xl p-5 shadow-sm bg-white hover:shadow-md transition-all duration-200 max-w-md">
       {user?._id === author?._id && (
         <button
           onClick={handleDelete}
