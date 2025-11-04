@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Heart, Share2, UserPlus, UserMinus } from "lucide-react";
 import { IconHeartFilled } from "@tabler/icons-react";
 import { LoaderOne as Spinner } from "../components/spinner";
+import { LoaderTwo } from "../components/spinner";
 import CommentCard from "../components/comment";
 import { useGetPostByIdQuery, useLikePostMutation, useDeleteLikeMutation } from "../features/post/postApi";
 import { Link, useParams } from "react-router-dom";
@@ -186,7 +187,7 @@ export default function PostSection() {
   };
 
   return (
-    <div className="flex gap-4 max-w-6xl mx-auto p-6 pb-20">
+    <div className="flex gap-4 min-w-6xl mx-10 p-6 pb-30">
       {/* Left Side - Post 70% */}
       <div className="flex-1 basis-7/10 border rounded-lg shadow-md p-4 flex flex-col gap-4 bg-white pb-20">
         {/* User Info + Follow */}
@@ -289,7 +290,7 @@ export default function PostSection() {
           dataLength={allComments.length}
           next={fetchMore}
           hasMore={hasMore}
-          loader={<h4 className="text-center py-4">Loading more comments...</h4>}
+          loader={<h4 className="text-center py-4"><LoaderTwo/></h4>}
           endMessage={
             <p className="text-center py-4 text-gray-500">
               No more comments 

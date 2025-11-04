@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+  --font-oswald: 'Oswald', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-ubuntu: 'Ubuntu', sans-serif;
+  --font-comic: 'Comic Neue', cursive;
+}
+
 body {
   --dot-bg: white;
   --dot-color: black;
@@ -9,4 +16,5 @@ body {
 		linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
 		linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
 		var(--dot-color);
+    font-family: 'Poppins', sans-serif;
 }

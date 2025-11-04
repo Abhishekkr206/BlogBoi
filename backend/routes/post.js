@@ -18,49 +18,14 @@ const router = express.Router()
 // ============================================================
 
 // Create new post
-router.post("/post", Auth, upload.single("img"), async (req, res) => {
-  try {
-    let imgUrl = ""
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, { folder: "blogBoi" })
-      fs.unlinkSync(req.file.path)
-      imgUrl = result.secure_url
-    }
-
-    const { title, content } = req.body
-    const blog = new Userpost({
-      img: imgUrl,
-      title,
-      content,
-      author: req.user.id
-    })
-    await blog.save()
-
-    // Clear user's posts cache
-    const keys = await redisClient.keys(`user:${req.user.id}:posts:page:*`)
-    if (keys.length > 0) {
-      await redisClient.del(keys)
-    }
-
-    res.status(200).json({ message: "Blog submited" })
-  } catch (err) {
-    res.status(500).json({ message: err.message })
-  }
-})
-
-// Get all posts (front page)
 router.get("/post", optionalAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 10
+    const limit = parseInt(req.query.limit) || 6
     const skip = (page - 1) * limit
 
-    // 70% trending, 30% recent
-    const trendingLimit = Math.ceil(limit * 0.7)
-    const recentLimit = limit - trendingLimit
-
-    // Get trending posts (fetch extra for proper pagination)
-    const trending = await Userpost.aggregate([
+    // Simple approach: Mix trending and recent, then sort by a score
+    const blog = await Userpost.aggregate([
       {
         $addFields: {
           engagementScore: {
@@ -68,25 +33,43 @@ router.get("/post", optionalAuth, async (req, res) => {
               { $multiply: [{ $size: { $ifNull: ["$like", []] } }, 2] },
               { $multiply: [{ $size: { $ifNull: ["$comment", []] } }, 3] }
             ]
+          },
+          // Combine engagement with recency (posts from last 7 days get boost)
+          finalScore: {
+            $add: [
+              {
+                $multiply: [
+                  { $size: { $ifNull: ["$like", []] } }, 
+                  2
+                ]
+              },
+              {
+                $multiply: [
+                  { $size: { $ifNull: ["$comment", []] } }, 
+                  3
+                ]
+              },
+              // Boost recent posts (within 7 days)
+              {
+                $cond: [
+                  { 
+                    $gte: [
+                      "$createdAt", 
+                      { $subtract: [new Date(), 7 * 24 * 60 * 60 * 1000] }
+                    ]
+                  },
+                  10, // Boost score
+                  0
+                ]
+              }
+            ]
           }
         }
       },
-      { $sort: { engagementScore: -1 } },
-      { $limit: limit * page }
+      { $sort: { finalScore: -1, createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
     ])
-
-    const trendingIds = trending.map(p => p._id)
-
-    // Get recent posts (exclude trending, fetch extra)
-    const recent = await Userpost.find({ _id: { $nin: trendingIds } })
-      .sort({ createdAt: -1 })
-      .limit(limit * page)
-
-    // Merge and shuffle
-    const merged = [...trending, ...recent].sort(() => Math.random() - 0.5)
-
-    // Apply proper pagination
-    const blog = merged.slice(skip, skip + limit)
 
     await Userpost.populate(blog, {
       path: "author",
@@ -109,9 +92,13 @@ router.get("/post", optionalAuth, async (req, res) => {
       updatedAt: post.updatedAt,
     }))
 
+    const hasMore = skip + blog.length < totalPosts
+
+    console.log(`Page ${page}: Returned ${blog.length} posts, hasMore: ${hasMore}`)
+
     res.status(200).json({
       message: blogs,
-      hasMore: skip + blog.length < totalPosts,
+      hasMore: hasMore,
     })
 
   } catch (err) {
@@ -598,11 +585,12 @@ router.patch("/user/edit", Auth, upload.single("profileimg"), async (req, res) =
     res.status(200).json({ 
       message: "Profile updated successfully", 
       user: {
-        id: updatedUser._id,
+        _id: updatedUser._id,
         name: updatedUser.name,
         bio: updatedUser.bio,
         profileimg: updatedUser.profileimg,
-        username: updatedUser.username
+        username: updatedUser.username,
+        email: updatedUser.email
       }
     })
 
@@ -695,16 +683,16 @@ router.get("/user/:userid/following", optionalAuth, async (req, res) => {
   }
 })
 
-// Get user's followers list
+// Get user's followers list - FIXED
 router.get("/user/:userid/follower", optionalAuth, async (req, res) => {
   try {
     const findFollower = req.params.userid
     const userFollower = await User.findById(findFollower).populate("follower", "username name profileimg")
 
-    let myFollowerList = []
+    let myFollowingList = [] // CHANGED: Check following list, not follower
     if (req.user) {
-      const currentUser = await User.findById(req.user.id).select("follower")
-      myFollowerList = currentUser.follower.map(id => id.toString())
+      const currentUser = await User.findById(req.user.id).select("following") // CHANGED
+      myFollowingList = currentUser.following.map(id => id.toString()) // CHANGED
     }
 
     const followers = userFollower.follower.map(f => ({
@@ -712,7 +700,7 @@ router.get("/user/:userid/follower", optionalAuth, async (req, res) => {
       username: f.username,
       name: f.name,
       profileimg: f.profileimg,
-      isfollowing: myFollowerList.includes(f._id.toString())
+      isfollowing: myFollowingList.includes(f._id.toString()) // Now correctly checks if I follow them
     }))
 
     res.status(200).json({ message: followers })
@@ -720,7 +708,6 @@ router.get("/user/:userid/follower", optionalAuth, async (req, res) => {
     res.status(500).json({ message: err.message })
   }
 })
-
 // Health check route
 
 router.get('/health', (req, res) => {

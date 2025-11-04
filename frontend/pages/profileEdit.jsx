@@ -2,10 +2,12 @@ import { useState } from "react"
 import { useEditUserMutation } from "../features/user/userApi"
 import { useSelector } from "react-redux"
 import { useToast } from "../components/Toast"
+import { useNavigate } from "react-router-dom"
 
 export default function ProfileEdit() {
     const [editPost] = useEditUserMutation()
     const {showError, showMessage} = useToast()
+    const navigate = useNavigate()
 
     const user = useSelector((state) => state.auth.user);
     const userid = user?._id;
@@ -40,6 +42,7 @@ export default function ProfileEdit() {
             console.log("Profile updated successfully")
             setFormData({ profileimg: null, name: "", bio: "" })
             showMessage("Profile updated successfully")
+            navigate(`/user/${userid}`)
         }
         catch (err) {
             console.log(err)

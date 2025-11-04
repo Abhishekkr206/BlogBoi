@@ -1,4 +1,5 @@
 import { api } from "../../app/apiSlice";
+import {setUser, clearUser} from "../auth/authSlicer";
 
 export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -23,6 +24,19 @@ export const userApi = api.injectEndpoints({
         method:"PATCH",
         body,
       }),
+      async onQueryStarted(arg, api) {
+        try{
+          const {data} = await api.queryFulfilled;
+          // update user in Redux
+          api.dispatch(setUser(data.user));
+
+          // update user in localStorage
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+        catch(err){
+          console.log(err);
+        }
+      },
       invalidatesTags: (result, error, {userid}) => [{type:'User', id:userid}],
     }),
 
@@ -35,6 +49,7 @@ export const userApi = api.injectEndpoints({
         { type: "User", id: userid },
         { type: "User", id: currentUserId },
         { type: "Follow", id: userid },
+        { type: "Follow", id: currentUserId },
       ],
     }),
 
@@ -47,6 +62,7 @@ export const userApi = api.injectEndpoints({
         { type: "User", id: userid },
         { type: "User", id: currentUserId },
         { type: "Follow", id: userid },
+        { type: "Follow", id: currentUserId },
       ],
     }),
   }),

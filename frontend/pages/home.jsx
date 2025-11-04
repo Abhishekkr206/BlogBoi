@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PostCard from "../components/postCard";
 import { LoaderOne as Spinner } from "../components/spinner";
+import { LoaderTwo } from "../components/spinner";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 import { useGetPostsQuery } from "../features/post/postApi";
@@ -46,7 +47,7 @@ export default function Home() {
           dataLength={allPosts.length}
           next={fetchMore}
           hasMore={hasMore}
-          loader={<h4 className="text-center py-4">Loading more posts...</h4>}
+          loader={<h4 className="text-center py-4"><LoaderTwo/></h4>}
           endMessage={
             <p className="text-center py-4 text-gray-500">
               No more posts to show 

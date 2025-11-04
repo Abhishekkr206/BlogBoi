@@ -119,7 +119,7 @@ export default function SignupForm() {
       />
       
       <div className="flex items-center justify-center min-h-[82vh] px-4">
-        <div className="w-full max-w-md border rounded-lg shadow p-6 bg-white z-10">
+        <div className="w-full max-w-md border rounded-lg shadow p-6 bg-white z-10 mt-5">
           <h2 className="text-3xl font-bold text-black mb-6 text-center">
             {showOtp ? "Verify OTP" : "Sign Up"}
           </h2>
@@ -226,6 +226,17 @@ export default function SignupForm() {
                 </button>
               </form>
 
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="text-black font-semibold hover:underline"
+                  >
+                    Login
+                  </button>
+                </p>
+              </div>
             </>
           ) : (
             <form className="flex flex-col gap-4" onSubmit={handleVerifyOtp}>

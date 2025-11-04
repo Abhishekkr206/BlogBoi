@@ -4,9 +4,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { LoaderOne as Spinner } from "../components/spinner";
+import { LoaderTwo } from "../components/spinner";
 import PostCard from "../components/postCard";
-import LogoutButton from "../components/auth/logout";
 import { useToast } from "../components/Toast";
+import { UserRound, Pencil } from "lucide-react";
 
 export default function UserProfile() {
   const { userid } = useParams();
@@ -26,36 +27,36 @@ export default function UserProfile() {
   const currentUserId = useSelector((state) => state.auth.user?._id);
 
   // Load posts when data changes
-useEffect(() => {
-  if (data?.response?.blogs) {
-    if (page === 1) {
-      // First page: replace all posts
-      setAllPosts(data.response.blogs);
-    } else {
-      // Subsequent pages: append new posts
-      setAllPosts((prev) => {
-        const newPosts = data.response.blogs.filter(
-          (blog) => !prev.some((p) => p._id === blog._id)
-        );
-        return [...prev, ...newPosts];
-      });
+  useEffect(() => {
+    if (data?.response?.blogs) {
+      if (page === 1) {
+        // First page: replace all posts
+        setAllPosts(data.response.blogs);
+      } else {
+        // Subsequent pages: append new posts
+        setAllPosts((prev) => {
+          const newPosts = data.response.blogs.filter(
+            (blog) => !prev.some((p) => p._id === blog._id)
+          );
+          return [...prev, ...newPosts];
+        });
+      }
+      
+      setHasMore(data.response.hasMore);
     }
-    
-    setHasMore(data.response.hasMore);
-  }
-}, [data, page]);
+  }, [data, page]);
 
   useEffect(() => {
     if (data?.response) {
       setIsFollowing(data.response.isfollowing || false);
-      setFollowerCount(user.followerCount || 0);
-      setFollowingCount(user.followingCount || 0);
+      setFollowerCount(data.response.followerCount || 0);
+      setFollowingCount(data.response.followingCount || 0);
     }
   }, [data]);
 
-if (isLoading && page === 1) return <Spinner />;
+  if (isLoading && page === 1) return <Spinner />;
 
-const user = data?.response;
+  const user = data?.response;
   if (!user) return <p>User not found</p>;
 
   const { username, name, profileimg, bio } = user;
@@ -76,22 +77,26 @@ const user = data?.response;
       showError("Action failed. Please try again.");
     }
   };
-  
+
 
   const fetchMore = () => setPage((prev) => prev + 1);
 
   const isOwnProfile = currentUserId === userid;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="min-w-4xl mx-auto p-6 space-y-6">
       {/* Profile Header */}
       <div className="flex justify-between items-center border-b pb-4">
         <div className="flex items-center gap-4">
-          <img
-            src={profileimg || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"}
-            alt={username}
-            className="w-30 h-30 rounded-full object-cover"
-          />
+          {profileimg ? (
+            <img
+              src={profileimg}
+              alt={username}
+              className="w-30 h-30 rounded-full object-cover"
+            />
+          ) : (
+            <UserRound className="w-30 h-30 text-gray" />
+          )}
           <div className="flex flex-col gap-1">
             <div className="flex items-start gap-4">
               <div className="flex flex-col">
@@ -111,15 +116,21 @@ const user = data?.response;
           </div>
         </div>
 
-      {!isOwnProfile && (
-        <button
-          className="px-4 py-2 text-lg text-center bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition"
-          onClick={handleFollow}
-        >
-          {isFollowing ? "Unfollow" : "Follow"}
-        </button>
-      )}
-        <LogoutButton />
+        {isOwnProfile ? (
+          <button
+            className="p-2 hover:bg-gray-100 rounded-full transition"
+            onClick={() => navigate("/user/edit")}
+          >
+            <Pencil className="w-5 h-5 text-gray-700" />
+          </button>
+        ) : (
+          <button
+            className="px-4 py-2 text-lg text-center bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition"
+            onClick={handleFollow}
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
+          </button>
+        )}
       </div>
 
       {/* Posts Section with Infinite Scroll */}
@@ -127,8 +138,8 @@ const user = data?.response;
         dataLength={allPosts.length}
         next={fetchMore}
         hasMore={hasMore}
-        loader={<h4>Loading more posts...</h4>}
-        endMessage={<p>No more posts </p>}
+        loader={<h4 className="py-4"><LoaderTwo/></h4>}
+        endMessage={<p>No more posts</p>}
       >
         <div className="flex flex-col gap-2 items-center">
           {allPosts.map((post) => (
