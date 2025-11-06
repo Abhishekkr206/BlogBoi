@@ -21,8 +21,8 @@ export default function FollowingPage() {
 
     return(
         <>
-        <div className='h-screen flex justify-center items-start bg-gray-50/50'>
-            <div className="h-[80vh] w-[70vw] flex flex-col items-center justify-start py-5 space-y-2">
+        <div className='h-screen flex justify-center items-start bg-gray-50/50 pb:20 sm:pb-0 overflow-x-hidden'>
+            <div className=" w-[95vw] sm:w-[70vw] flex flex-col items-center justify-start py-5 space-y-2">
                   {followingData.length > 0 ? (
                     followingData.map((following) => (
                       <FollowCard key={following._id} data={following} />

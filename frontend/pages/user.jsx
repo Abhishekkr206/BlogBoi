@@ -83,70 +83,84 @@ export default function UserProfile() {
 
   const isOwnProfile = currentUserId === userid;
 
-  return (
-    <div className="min-w-4xl mx-auto p-6 space-y-6">
-      {/* Profile Header */}
-      <div className="flex justify-between items-center border-b pb-4">
-        <div className="flex items-center gap-4">
-          {profileimg ? (
-            <img
-              src={profileimg}
-              alt={username}
-              className="w-30 h-30 rounded-full object-cover"
-            />
-          ) : (
-            <UserRound className="w-30 h-30 text-gray" />
-          )}
-          <div className="flex flex-col gap-1">
-            <div className="flex items-start gap-4">
-              <div className="flex flex-col">
-                <h2 className="text-2xl font-bold">{username}</h2>
-                <h3 className="text-md">{name}</h3>
+return (
+  <div className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    {/* Profile Header */}
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4 sm:gap-0">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        {profileimg ? (
+          <img
+            src={profileimg}
+            alt={username}
+            className="w-24 h-24 sm:w-30 sm:h-30 rounded-full object-cover mx-auto sm:mx-0"
+          />
+        ) : (
+          <UserRound className="w-24 h-24 sm:w-30 sm:h-30 text-gray mx-auto sm:mx-0" />
+        )}
+
+        <div className="flex flex-col gap-2 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold">{username}</h2>
+              <h3 className="text-sm sm:text-md">{name}</h3>
+            </div>
+
+            <div className="flex justify-center sm:justify-start gap-4 text-gray-700 text-sm sm:text-md mt-2 sm:mt-0">
+              <div
+                className="hover:underline cursor-pointer"
+                onClick={() => navigate(`/user/${userid}/follower`)}
+              >
+                <span className="font-semibold">{followerCount}</span> Followers
               </div>
-              <div className="flex gap-4 text-gray-700 text-md">
-                <div className="hover:underline cursor-pointer" onClick={() => navigate(`/user/${userid}/follower`)}>
-                  <span className="font-semibold">{followerCount}</span> Followers
-                </div>
-                <div className="hover:underline cursor-pointer" onClick={() => navigate(`/user/${userid}/following`)}>
-                  <span className="font-semibold">{followingCount}</span> Following
-                </div>
+              <div
+                className="hover:underline cursor-pointer"
+                onClick={() => navigate(`/user/${userid}/following`)}
+              >
+                <span className="font-semibold">{followingCount}</span> Following
               </div>
             </div>
-            {bio && <p className="text-gray-600 text-sm mt-2 max-w-md">{bio}</p>}
           </div>
-        </div>
 
-        {isOwnProfile ? (
-          <button
-            className="p-2 hover:bg-gray-100 rounded-full transition"
-            onClick={() => navigate("/user/edit")}
-          >
-            <Pencil className="w-5 h-5 text-gray-700" />
-          </button>
-        ) : (
-          <button
-            className="px-4 py-2 text-lg text-center bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition"
-            onClick={handleFollow}
-          >
-            {isFollowing ? "Unfollow" : "Follow"}
-          </button>
-        )}
+          {bio && (
+            <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2 max-w-xs sm:max-w-md mx-auto sm:mx-0">
+              {bio}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Posts Section with Infinite Scroll */}
-      <InfiniteScroll
-        dataLength={allPosts.length}
-        next={fetchMore}
-        hasMore={hasMore}
-        loader={<h4 className="py-4"><LoaderTwo/></h4>}
-        endMessage={<p>No more posts</p>}
-      >
-        <div className="flex flex-col gap-2 items-center">
-          {allPosts.map((post) => (
-            <PostCard key={post._id} data={post} />
-          ))}
-        </div>
-      </InfiniteScroll>
+      {/* Buttons */}
+      {isOwnProfile ? (
+        <button
+          className="p-2 hover:bg-gray-100 rounded-full transition self-center sm:self-auto"
+          onClick={() => navigate("/user/edit")}
+        >
+          <Pencil className="w-5 h-5 text-gray-700" />
+        </button>
+      ) : (
+        <button
+          className="px-4 py-2 text-sm sm:text-lg bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition w-full sm:w-auto"
+          onClick={handleFollow}
+        >
+          {isFollowing ? "Unfollow" : "Follow"}
+        </button>
+      )}
     </div>
-  );
+
+    {/* Posts */}
+    <InfiniteScroll
+      dataLength={allPosts.length}
+      next={fetchMore}
+      hasMore={hasMore}
+      loader={<h4 className="py-4"><LoaderTwo /></h4>}
+      endMessage={<p className="text-center mb-20 sm:mb-4 text-gray-800 font-semibold">No more posts</p>}
+    >
+      <div className="flex flex-col gap-2 items-center w-full mb-5 sm:mb-10">
+        {allPosts.map((post) => (
+          <PostCard key={post._id} data={post} />
+        ))}
+      </div>
+    </InfiniteScroll>
+  </div>
+);
 }

@@ -18,6 +18,37 @@ const router = express.Router()
 // ============================================================
 
 // Create new post
+router.post("/post", Auth, upload.single("img"), async (req, res) => {
+  try {
+    let imgUrl = ""
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: "blogBoi" })
+      fs.unlinkSync(req.file.path)
+      imgUrl = result.secure_url
+    }
+
+    const { title, content } = req.body
+    const blog = new Userpost({
+      img: imgUrl,
+      title,
+      content,
+      author: req.user.id
+    })
+    await blog.save()
+
+    // Clear user's posts cache
+    const keys = await redisClient.keys(`user:${req.user.id}:posts:page:*`)
+    if (keys.length > 0) {
+      await redisClient.del(keys)
+    }
+
+    res.status(200).json({ message: "Blog submited" })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// Get all posts (front page)
 router.get("/post", optionalAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1

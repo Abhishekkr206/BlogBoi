@@ -17,10 +17,8 @@ export default function Home() {
   useEffect(() => {
     if (data?.message) {
       if (page === 1) {
-        // First page: replace all posts
         setAllPosts(data.message);
       } else {
-        // Subsequent pages: append new posts
         setAllPosts((prev) => {
           const newPosts = data.message.filter(
             (post) => !prev.some((p) => p._id === post._id)
@@ -28,39 +26,41 @@ export default function Home() {
           return [...prev, ...newPosts];
         });
       }
-
-      // Check if there are more posts
-        setHasMore(data.hasMore);
+      setHasMore(data.hasMore);
     }
   }, [data, page]);
 
   if (isLoading && page === 1) return <Spinner />;
 
   const fetchMore = () => {
+    if (!isFetching && hasMore) {
       setPage((prev) => prev + 1);
+    }
   };
 
   return (
-    <>
-      <div className="min-h-screen w-full flex flex-col justify-start items-center gap-5 py-5">
-        <InfiniteScroll
-          dataLength={allPosts.length}
-          next={fetchMore}
-          hasMore={hasMore}
-          loader={<h4 className="text-center py-4"><LoaderTwo/></h4>}
-          endMessage={
-            <p className="text-center py-4 text-gray-500">
-              No more posts to show 
-            </p>
-          }
-        >
-          <div className="flex flex-col gap-5 items-center">
-            {allPosts.map((post) => (
-              <PostCard key={post._id} data={post} />
-            ))}
+    <div className="w-full min-h-screen">
+      <InfiniteScroll
+        dataLength={allPosts.length}
+        next={fetchMore}
+        hasMore={hasMore}
+        loader={
+          <div className="text-center py-4">
+            <LoaderTwo/>
           </div>
-        </InfiniteScroll>
-      </div>
-    </>
+        }
+        endMessage={
+          <p className="text-center py-4 text-gray-500 font-medium mb-20">
+            No more posts to show 
+          </p>
+        }
+      >
+        <div className="flex flex-col justify-start items-center gap-5 py-5 px-1 w-full">
+          {allPosts.map((post) => (
+            <PostCard key={post._id} data={post} />
+          ))}
+        </div>
+      </InfiniteScroll>
+    </div>
   );
 }

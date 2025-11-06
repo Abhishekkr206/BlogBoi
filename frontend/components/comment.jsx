@@ -1,7 +1,7 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeleteCommentMutation, useGetRepliesQuery, useAddReplyMutation, useDeleteReplyMutation } from "../features/comment/commentApi";
-import { Trash2 } from "lucide-react";
+import { Trash2, UserRound } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useToast } from "../components/Toast";
 
@@ -119,14 +119,18 @@ export default function CommentCard({ comments }) {
 
       {/* User info */}
       <div className="flex items-center gap-3 pr-8">
+        {author.profileimg ? (
         <img
-          src={author.profileimg || "https://randomuser.me/api/portraits/men/65.jpg"}
+          src={author.profileimg }
           alt={author.username}
-          className="w-11 h-11 rounded-full ring-2 ring-gray-50 object-cover"
+          className="w-11 h-11 rounded-full ring-2 ring-gray-50 object-cover border cursor-pointer"
         />
+        ) :(
+          <UserRound className="w-11 h-11 text-gray-700 border rounded-full p-0.5 space-y-1 font-medium" />
+        )}
         <div>
           <div onClick={handleRedirect}>
-            <h4 className="font-semibold text-gray-900 cursor-pointer hover:text-gray-700 transition-colors">
+            <h4 className="font-semibold text-gray-900 cursor-pointer hover:text-gray-700 transition-colors hover:underline">
               {author.username}
             </h4>
           </div>
@@ -142,7 +146,7 @@ export default function CommentCard({ comments }) {
       </div>
 
       {/* Reply button */}
-      <div className="mt-3">
+      <div className="mt-3 flex">
         <button
           onClick={() => {
             setShowReplies(!showReplies);
@@ -150,8 +154,9 @@ export default function CommentCard({ comments }) {
           }}
           className="text-gray-900 text-sm font-semibold hover:text-gray-700 transition-colors"
         >
-          {showReplies ? "Hide Replies" : "Reply"}
+          {showReplies ? "Hide Replies " : "Reply"}
         </button>
+        <p className="text-sm">({allReplies.length})</p>
       </div>
 
       {/* Reply section */}
@@ -182,11 +187,15 @@ export default function CommentCard({ comments }) {
             <div className="space-y-3 pl-4 border-l-2 border-gray-100">
               {allReplies.map((reply) => (
                 <div key={reply._id} className="flex items-start gap-2 group">
+                  {reply.author?.profileimg ? (
                   <img
-                    src={reply.author?.profileimg || "https://randomuser.me/api/portraits/men/65.jpg"}
+                    src={reply.author?.profileimg }
                     alt={reply.author?.username}
                     className="w-8 h-8 rounded-full object-cover"
                   />
+                  ) : (
+                    <UserRound className="w-8 h-8 text-gray" />
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-gray-900">

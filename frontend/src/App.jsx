@@ -48,13 +48,14 @@ export default function App(){
                 {/* Main app routes - WITH sidebar and navbar */}
                 <Route path="/*" element={
                     <div className="flex h-screen">
+                        
                         <Sidebar isExpanded={isSidebarExpanded} setIsExpanded={setIsSidebarExpanded} />
 
-                        <div
-                          className={`flex-1 flex flex-col transition-all duration-300 ${
-                            user ? (isSidebarExpanded ? "ml-64" : "ml-16") : "ml-0"
-                          }`}
-                        >
+                            <div
+                              className={`flex-1 flex flex-col transition-all duration-300 ${
+                                user ? (isSidebarExpanded ? "md:ml-64" : "md:ml-16") : "ml-0"
+                              }`}
+                            >
                             <Navbar/>
                                 <Routes>
                                     <Route path="/" element={<Home/>} />

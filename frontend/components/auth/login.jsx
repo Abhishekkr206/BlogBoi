@@ -55,7 +55,7 @@ export default function LoginForm() {
 
   return (
     <>
-      <div className="min-h-full w-full bg-gradient-to-b from-white to-white/20 relative">
+      <div className="min-h-full bg-gradient-to-b from-white to-white/20 relative mx-2 sm:mx-0">
         <div
           className="absolute inset-0 z-0"
           style={{

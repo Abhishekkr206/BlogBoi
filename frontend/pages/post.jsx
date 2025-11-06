@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Share2, UserPlus, UserMinus } from "lucide-react";
+import { Heart, Share2, UserPlus, UserMinus, UserRound } from "lucide-react";
 import { IconHeartFilled } from "@tabler/icons-react";
 import { LoaderOne as Spinner } from "../components/spinner";
 import { LoaderTwo } from "../components/spinner";
@@ -56,10 +56,8 @@ export default function PostSection() {
   useEffect(() => {
     if (commentData?.message) {
       if (page === 1) {
-        // First page: replace all comments
         setAllComments(commentData.message);
       } else {
-        // Subsequent pages: append new comments
         setAllComments((prev) => {
           const newComments = commentData.message.filter(
             (comment) => !prev.some((c) => c._id === comment._id)
@@ -67,19 +65,15 @@ export default function PostSection() {
           return [...prev, ...newComments];
         });
       }
-
-      // Check if there are more comments
       setHasMore(commentData.hasMore !== undefined ? commentData.hasMore : false);
     }
   }, [commentData, page]);
 
-  // useEffect - Post data se state update karo
   useEffect(() => {
     if (post) {
       if (post.isliked !== undefined) {
         setLiked(post.isliked);
       }
-      // Only set totalLikes once (first render), not every post update
       setTotalLikes((prev) => (prev === 0 ? post.like : prev));
       if (post.isfollowing !== undefined) {
         setFollowing(post.isfollowing);
@@ -87,12 +81,10 @@ export default function PostSection() {
     }
   }, [post]);
 
-
   const fetchMore = () => {
     setPage((prev) => prev + 1);
   };
 
-  // NOW EARLY RETURNS ARE SAFE
   if (isLoading || (commentIsLoading && page === 1)) {
     return <Spinner />;
   }
@@ -105,17 +97,13 @@ export default function PostSection() {
     return <div className="text-center mt-10">Post not found.</div>;
   }
 
-  // Check if author exists before destructuring
   if (!post.author) {
     return <div className="text-center mt-10 text-red-500">Author data missing.</div>;
   }
 
-  // Destructure safely
   const { _id, author, img, title, content, createdAt } = post;
-  
   const authorId = author._id;
   
-  // Extra safety check
   if (!author._id) {
     console.error("Author ID is missing:", author);
     return <div className="text-center mt-10 text-red-500">Invalid author data.</div>;
@@ -145,7 +133,7 @@ export default function PostSection() {
   };
 
   const handleLike = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
       if (liked) {
         setTotalLikes(prev => prev - 1);
@@ -156,7 +144,6 @@ export default function PostSection() {
         setTotalLikes(prev => prev + 1);
         setLiked(true);
         await likePost({ authorId, postid }).unwrap();
-
         showMessage("Post liked successfully!");
       }
     } catch (err) {
@@ -165,7 +152,6 @@ export default function PostSection() {
   };
 
   const handleFollow = async () => {
-    // Safety check
     if (!author?._id) {
       console.error("Cannot follow: Author ID is undefined");
       return;
@@ -187,31 +173,35 @@ export default function PostSection() {
   };
 
   return (
-    <div className="flex gap-4 min-w-6xl mx-10 p-6 pb-30">
-      {/* Left Side - Post 70% */}
-      <div className="flex-1 basis-7/10 border rounded-lg shadow-md p-4 flex flex-col gap-4 bg-white pb-20">
+    <div className="flex flex-col lg:flex-row gap-4 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 pb-20 lg:pb-30">
+      {/* Left Side - Post */}
+      <div className="w-full lg:flex-1 lg:basis-7/10 border rounded-lg shadow-md p-4 sm:p-6 flex flex-col gap-4 bg-white lg:self-start lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]">
         {/* User Info + Follow */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <Link to={`/user/${author._id}`}>
-              <div className="flex items-center justify-center gap-3 hover:underline">
-                <img
-                  src={author.profileimg || "https://randomuser.me/api/portraits/men/65.jpg"}
-                  alt={author.username}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <h4 className="font-bold">{author.username}</h4>
+              <div className="flex items-center gap-2 sm:gap-3 hover:underline">
+                {author.profileimg ? (
+                  <img
+                    src={author.profileimg}
+                    alt={author.username}
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <UserRound className="w-10 h-10 sm:w-12 sm:h-12 text-gray-700 border rounded-full p-0.5" />
+                )}
+                <h4 className="font-bold text-sm sm:text-base">{author.username}</h4>
               </div>
             </Link>
-            <span className="text-gray-500 text-sm">
+            <span className="text-gray-500 text-xs sm:text-sm">
               {new Date(createdAt).toLocaleString()}
             </span>
           </div>
-          {/* Show follow button only if not viewing own post */}
+          
           {currentUserId && author._id && currentUserId !== author._id && (
             <button
               onClick={handleFollow}
-              className={`flex items-center gap-1 px-4 py-2 rounded-xl transition ${
+              className={`flex items-center justify-center gap-1 px-3 sm:px-4 py-2 rounded-xl transition text-sm sm:text-base whitespace-nowrap ${
                 following
                   ? "bg-gray-200 text-black hover:bg-gray-300"
                   : "bg-black text-white hover:bg-gray-800"
@@ -230,11 +220,11 @@ export default function PostSection() {
           )}
         </div>
 
-        {/* Like & Share Buttons ABOVE */}
+        {/* Like & Share Buttons */}
         <div className="flex items-center gap-4 mt-2">
           <button
             onClick={handleLike}
-            className={`flex items-center gap-1 transition ${
+            className={`flex items-center gap-1 transition text-sm sm:text-base ${
               liked ? "text-red-500" : "text-gray-700 hover:text-red-500"
             }`}
           >
@@ -245,25 +235,25 @@ export default function PostSection() {
             )}
             <span>{totalLikes}</span>
           </button>
-          <button className="flex items-center gap-1 text-gray-700 hover:text-blue-500 transition">
+          <button className="flex items-center gap-1 text-gray-700 hover:text-blue-500 transition text-sm sm:text-base">
             <Share2 className="w-5 h-5" /> Share
           </button>
         </div>
 
         {/* Title + Image + Content */}
-        <div className="flex flex-col gap-3 mt-2">
-          <h2 className="text-4xl font-semibold">{title}</h2>
-          {img && <img src={img} alt={title} className="w-full h-fit" />}
+        <div className="flex flex-col gap-3 mt-2 lg:overflow-y-auto lg:flex-1 lg:min-h-0">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold break-words">{title}</h2>
+          {img && <img src={img} alt={title} className="w-full h-auto rounded-lg" />}
           <div 
-            className="text-gray-700 prose prose-lg max-w-none text-lg" 
+            className="text-gray-700 prose prose-sm sm:prose-base lg:prose-lg max-w-none break-words" 
             dangerouslySetInnerHTML={{ __html: content }}
           />        
         </div>
       </div>
 
-      {/* Right Side - Comments 30% */}
-      <div className="flex flex-col basis-3/10 gap-4">
-        <h3 className="text-2xl font-semibold">Comments</h3>
+      {/* Right Side - Comments */}
+      <div className="w-full lg:w-auto lg:basis-3/10 flex flex-col gap-4">
+        <h3 className="text-xl sm:text-2xl font-semibold">Comments</h3>
 
         {/* Comment input */}
         <form onSubmit={handleSubmit}>
@@ -273,11 +263,11 @@ export default function PostSection() {
               name="content"
               value={formData.content}
               placeholder="Write a comment..."
-              className="border border-gray-300 rounded-md px-3 py-2 resize-none focus:outline-none focus:border-black bg-white/80"
+              className="border border-gray-300 rounded-md px-3 py-2 resize-none focus:outline-none focus:border-black bg-white/80 text-sm sm:text-base"
               rows={4}
             />
             <button
-              className="px-3 py-1 bg-black text-white rounded-md text-sm hover:bg-gray-800 transition"
+              className="px-3 py-2 bg-black text-white rounded-md text-sm hover:bg-gray-800 transition"
               type="submit"
             >
               Comment
@@ -292,7 +282,7 @@ export default function PostSection() {
           hasMore={hasMore}
           loader={<h4 className="text-center py-4"><LoaderTwo/></h4>}
           endMessage={
-            <p className="text-center py-4 text-gray-500">
+            <p className="text-center py-4 text-gray-500 text-sm">
               No more comments 
             </p>
           }
