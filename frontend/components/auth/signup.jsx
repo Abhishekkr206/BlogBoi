@@ -2,16 +2,20 @@ import { useState } from "react";
 import { useSignupMutation, useGoogleMutation, useValidateOtpMutation } from "../../features/auth/authApi";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from '@react-oauth/google';
+import { LoaderOne as Spinner } from "../spinner";
+import { useToast } from "../Toast"; 
 
 export default function SignupForm() {
   const [signup] = useSignupMutation();
   const [google] = useGoogleMutation();
   const [validateOtp] = useValidateOtpMutation();
+  const {showMessage} = useToast()
   const navigate = useNavigate();
 
   const [showOtp, setShowOtp] = useState(false);
   const [isGoogleSignup, setIsGoogleSignup] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     profileimg: "",
@@ -48,16 +52,25 @@ export default function SignupForm() {
         }));
         setIsGoogleSignup(true);
       }
+      showMessage("Signed up with Google successfully")
     } catch (err) {
       setError("Google authentication failed");
     }
   };
-
+  if(isLoading){
+    return(
+      <div className="flex items-center justify-center min-h-[80vh] bg-gray-50/20">
+        <Spinner/>
+      </div>
+    )
+  }
+  
   const handleDone = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
+      setIsLoading(true)
       const res = await signup({
         profileimg: formData.profileimg,
         username: formData.username,
@@ -76,10 +89,15 @@ export default function SignupForm() {
       else if (!isGoogleSignup) {
         setShowOtp(true);
       }
+      showMessage("Signup successful, please verify OTP")
     } catch (err) {
+      setIsLoading(false)
       setError(err?.data?.message || "Signup failed");
+    } finally{
+      setIsLoading(false)
     }
   };
+
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
@@ -96,10 +114,11 @@ export default function SignupForm() {
 
       localStorage.setItem("user", JSON.stringify(res.user));
       navigate("/");
+      showMessage("OTP verified successfully")
     } catch (err) {
       setError(err?.data?.message || "Invalid OTP");
-    }
-  };
+    };
+  }
 
   return (
     <div className="min-h-full w-full bg-gradient-to-b from-white to-white/20 relative">

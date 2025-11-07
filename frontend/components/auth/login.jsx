@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useLoginMutation, useGoogleMutation } from "../../features/auth/authApi";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from '@react-oauth/google';
+import { useToast } from "../Toast"
 
 export default function LoginForm() {
   const [login] = useLoginMutation();
   const [google] = useGoogleMutation();
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const { showMessage} = useToast()
   
   const [formData, setFormData] = useState({
     user: "",
@@ -30,6 +32,7 @@ export default function LoginForm() {
         // New user - redirect to signup
         navigate("/register/details");
       }
+      showMessage("Logged in with Google successfully")
     } catch (err) {
       setError("Google authentication failed");
     }
@@ -48,6 +51,7 @@ export default function LoginForm() {
 
       localStorage.setItem("user", JSON.stringify(res.user));
       navigate("/");
+      showMessage("Logged in successfully")
     } catch (err) {
       setError(err?.data?.message || "Login failed");
     }

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react" 
 import { useEditUserMutation } from "../features/user/userApi"
 import { useSelector } from "react-redux"
 import { useToast } from "../components/Toast"
@@ -11,14 +11,15 @@ export default function ProfileEdit() {
 
     const user = useSelector((state) => state.auth.user);
     const userid = user?._id;
-    console.log(user)
-    
+
     const [formData, setFormData] = useState({
         profileimg: null,
         name: "",
         bio: "",
     })
-    
+
+    const [loading, setLoading] = useState(false)  // ✅ Loading state
+
     const handleChanges = (e) => {
         if (e.target.type === "file") {
             setFormData({ ...formData, profileimg: e.target.files[0] });
@@ -29,6 +30,8 @@ export default function ProfileEdit() {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
+        setLoading(true) // ✅ Start animation
+
         try {
             const body = new FormData()
             body.append("name", formData.name)
@@ -37,9 +40,9 @@ export default function ProfileEdit() {
             if (formData.profileimg) {
                 body.append("profileimg", formData.profileimg)
             }
+
             await editPost({userid, body}).unwrap()
 
-            console.log("Profile updated successfully")
             setFormData({ profileimg: null, name: "", bio: "" })
             showMessage("Profile updated successfully")
             navigate(`/user/${userid}`)
@@ -47,6 +50,9 @@ export default function ProfileEdit() {
         catch (err) {
             console.log(err)
             showError("Failed to update profile")
+        }
+        finally {
+            setLoading(false) // ✅ Stop animation
         }
     }
 
@@ -82,6 +88,7 @@ export default function ProfileEdit() {
                                     />
                                 </div>
                             </div>
+
                             <div className="flex flex-col gap-1">
                                 <label className="font-medium">Name</label>
                                 <input 
@@ -93,6 +100,7 @@ export default function ProfileEdit() {
                                     placeholder="Enter your name" 
                                 />
                             </div>
+
                             <div className="flex flex-col gap-1">
                                 <label className="font-medium">Bio</label>
                                 <textarea 
@@ -104,11 +112,16 @@ export default function ProfileEdit() {
                                     placeholder="Tell us about yourself"
                                 ></textarea>
                             </div>
+
                             <button 
                                 type="submit" 
-                                className="self-start px-5 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition"
+                                disabled={loading}
+                                className="self-start px-5 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition flex items-center gap-2 disabled:opacity-60"
                             >
-                                Save Changes
+                                {loading && (
+                                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                )}
+                                {loading ? "Saving..." : "Save Changes"}
                             </button>
                         </div>
                     </form>

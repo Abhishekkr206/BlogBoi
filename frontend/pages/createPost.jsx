@@ -4,8 +4,11 @@ import { useAddPostMutation } from "../features/post/postApi";
 import TextEditor from "../components/TextEditor";
 import { useSelector } from "react-redux";
 import { useToast } from "../components/Toast";
+import { useNavigate } from "react-router-dom";
+import { LoaderOne as Spinner } from "../components/spinner";
 
 export default function CreatePost() {
+  const [isLoading, setIsLoading] = useState(false)
   const [addPost] = useAddPostMutation();
   const editorRef = useRef(null);
   
@@ -18,6 +21,8 @@ export default function CreatePost() {
   
   const currentUserId = useSelector((state) => state.auth.user?._id);
 
+  const navigate = useNavigate();
+
   const handleChanges = (e) => {
     if (e.target.name === "img" && e.target.files?.[0]) {
       setPostData({ ...postData, img: e.target.files[0] });
@@ -29,9 +34,18 @@ export default function CreatePost() {
   const removeImage = () => {
     setPostData({ ...postData, img: null });
   };
+  
+  if(isLoading){
+    return (
+      <div className="flex items-center justify-center min-h-[80vh] bg-gray-50/20">
+        <Spinner />
+      </div>
+    )
+  }
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true)
       const formData = new FormData();
       formData.append("title", postData.title);
       formData.append("content", postData.content);
@@ -50,9 +64,14 @@ export default function CreatePost() {
         editorRef.current.clearContent();
       }
       showMessage("Post created successfully");
+      navigate(`/user/${currentUserId}`);
     } catch (err) {
+      setIsLoading(false)
       console.log(err);
       showError("Failed to create post. Please try again.");
+    }
+    finally{
+      setIsLoading(false)
     }
   };
 

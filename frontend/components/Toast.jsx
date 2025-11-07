@@ -75,7 +75,7 @@ const Toast = ({ id, message, type, onClose }) => {
 
   return (
     <div
-      className={`flex items-center gap-3 ${bgColor} text-white border border-black px-4 py-3 rounded-lg shadow-lg min-w-[300px] max-w-md transform transition-all duration-300 ${
+      className={`flex items-center gap-3 ${bgColor} text-white border border-black px-4 py-3 rounded-lg shadow-lg min-w-[200px] sm:min-w-[300px] max-w-md transform transition-all duration-300 ${
         isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}
     >
