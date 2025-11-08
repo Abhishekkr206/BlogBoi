@@ -37,7 +37,7 @@ export default function UserProfile() {
   // Logged-in user id
   const currentUserId = useSelector((state) => state.auth.user?._id);
 
-  // ✅ When API returns data, update posts list
+  // When API returns data, update posts list
   useEffect(() => {
     if (data?.response?.blogs) {
       if (page === 1) {
@@ -56,7 +56,7 @@ export default function UserProfile() {
     }
   }, [data, page]);
 
-  // ✅ Update UI states when profile data loads
+  // Update UI states when profile data loads
   useEffect(() => {
     if (data?.response) {
       setIsFollowing(data.response.isfollowing || false);
@@ -73,7 +73,7 @@ export default function UserProfile() {
 
   const { username, name, profileimg, bio } = user;
 
-  // ✅ Follow / Unfollow logic
+  // Follow / Unfollow logic
   const handleFollow = async () => {
     try {
       if (!isFollowing) {

@@ -158,6 +158,13 @@ export default function PostSection() {
     }
   };
 
+  // share
+  function sharePost(){
+    const postUrl = window.location.href;
+    navigator.clipboard.writeText(postUrl);
+    showMessage("Copied to clipboard!");
+  }
+
   return (
     <div className="flex flex-col lg:flex-row gap-4 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 pb-20 lg:pb-30">
 
@@ -214,7 +221,7 @@ export default function PostSection() {
             <span>{totalLikes}</span>
           </button>
 
-          <button className="flex items-center gap-1 text-gray-700 hover:text-blue-500 transition text-sm sm:text-base">
+          <button className="flex items-center gap-1 text-gray-700 hover:text-blue-500 transition text-sm sm:text-base" onClick={sharePost}>
             <Share2 className="w-5 h-5" /> Share
           </button>
         </div>
