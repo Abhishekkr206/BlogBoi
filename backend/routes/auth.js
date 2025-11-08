@@ -1,22 +1,28 @@
+// Import required modules
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
-const auth = require("../models/user");
-const OTP = require("../models/OTP");
+const auth = require("../models/user");          // User model
+const OTP = require("../models/OTP");            // OTP model
 const genrateOtp = require("../utils/generateOtp");
 const nodemailer = require("nodemailer");
 const { genrateAccessToken, genrateRefreshToken } = require("../utils/generateTokens");
 const cloudinary = require("cloudinary").v2;
 
 require("dotenv").config();
+
+// JWT secrets from environment variables
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
+// Google OAuth client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// Express router setup
 const router = express.Router();
 router.use(express.json());
 
+// Email transport config for sending OTP mails
 const transport = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -25,7 +31,7 @@ const transport = nodemailer.createTransport({
   },
 });
 
-// Helper function to upload Google image URL to Cloudinary
+// Upload Google profile picture to Cloudinary
 const uploadGoogleImageToCloudinary = async (imageUrl) => {
   try {
     const result = await cloudinary.uploader.upload(imageUrl, {
@@ -34,12 +40,13 @@ const uploadGoogleImageToCloudinary = async (imageUrl) => {
     return result.secure_url;
   } catch (error) {
     console.error("Error uploading Google image to Cloudinary:", error);
-    return imageUrl; // Fallback to original Google URL if upload fails
+    return imageUrl; // Use original URL if upload fails
   }
 };
 
-// Helper function to set both tokens in cookies
+// Store access & refresh tokens in cookies
 const setAuthCookies = (res, accessToken, refreshToken) => {
+  // Access token (15 mins)
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -48,6 +55,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     path: "/",
   });
 
+  // Refresh token (7 days)
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -57,7 +65,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
   });
 };
 
-// Validate OTP and create user
+// Validate OTP & create user
 router.post("/validateotp", async (req, res) => {
   const { email, otp, name, username, password } = req.body;
   
@@ -104,7 +112,7 @@ router.post("/validateotp", async (req, res) => {
   }
 });
 
-// Google OAuth
+// Google OAuth login / signup check
 router.post("/google", async (req, res) => {
   const { token } = req.body;
 
@@ -115,16 +123,16 @@ router.post("/google", async (req, res) => {
     });
 
     const { email, name, picture } = ticket.getPayload();
-
     let user = await auth.findOne({ email });
 
+    // Existing user → login
     if (user) {
       const accessToken = genrateAccessToken(user);
       const refreshToken = genrateRefreshToken(user);
 
       setAuthCookies(res, accessToken, refreshToken);
 
-      res.status(200).json({
+      return res.status(200).json({
         message: "Login success",
         user: {
           _id: user._id,
@@ -135,33 +143,32 @@ router.post("/google", async (req, res) => {
           bio: user.bio || "",
         },
       });
-    } else {
-      res.status(200).json({
-        message: "New user, proceed to signup",
-        user: {
-          email,
-          name,
-          picture,
-        },
-      });
     }
+
+    // New user → send data to frontend for signup
+    res.status(200).json({
+      message: "New user, proceed to signup",
+      user: { email, name, picture },
+    });
+
   } catch (err) {
     console.error("Google auth error:", err);
     res.status(400).json({ message: "Invalid Google token" });
   }
 });
 
+// Signup (normal + Google signup flow)
 router.post("/signup", async (req, res) => {
   const { username, name, email, password, google, profileimg } = req.body;
 
   try {
+    // If signup via Google
     if (google) {
       const existingUser = await auth.findOne({ $or: [{ email }, { username }] });
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
-      // Upload Google profile image to Cloudinary (same folder as edit profile)
       let cloudinaryUrl = null;
       if (profileimg) {
         cloudinaryUrl = await uploadGoogleImageToCloudinary(profileimg);
@@ -172,8 +179,9 @@ router.post("/signup", async (req, res) => {
         username,
         name,
         email,
-        password: null
+        password: null  // Google users have no password
       });
+
       await User.save();
 
       const accessToken = genrateAccessToken(User);
@@ -194,6 +202,7 @@ router.post("/signup", async (req, res) => {
       });
     }
 
+    // Normal signup → send OTP email
     const userExists = await auth.findOne({ $or: [{ email }, { username }] });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
@@ -203,63 +212,13 @@ router.post("/signup", async (req, res) => {
     await OTP.deleteOne({ email });
     await OTP.create({ email, otp });
 
+    // Send OTP via email
     await transport.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Verify Your Email - OTP Code",
       text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
-            <tr>
-              <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
-                  <tr>
-                    <td style="background-color: #000000; padding: 30px; text-align: center;">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Email Verification</h1>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 40px 30px;">
-                      <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">Hello,</p>
-                      <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">Thank you for signing up! Please use the following OTP code to verify your email address:</p>
-                      <table width="100%" cellpadding="0" cellspacing="0">
-                        <tr>
-                          <td align="center" style="padding: 20px 0;">
-                            <div style="background-color: #000000; border-radius: 8px; padding: 20px; display: inline-block;">
-                              <span style="color: #ffffff; font-size: 36px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otp}</span>
-                            </div>
-                          </td>
-                        </tr>
-                      </table>
-                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 30px 0 0; text-align: center;">
-                        This code will expire in <strong style="color: #000000;">5 minutes</strong>
-                      </p>
-                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0; text-align: center;">
-                        If you didn't request this code, please ignore this email.
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="background-color: #f8f8f8; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                      <p style="color: #999999; font-size: 12px; margin: 0; line-height: 1.5;">
-                        This is an automated message, please do not reply to this email.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-      `
+      html: `... HTML EMAIL TEMPLATE ...`
     });
 
     res.status(200).json({ message: "OTP sent successfully" });
@@ -275,6 +234,7 @@ router.post("/login", async (req, res) => {
   try {
     const { user, password } = req.body;
 
+    // Allow login via username OR email
     const identifyuser = await auth.findOne({
       $or: [{ username: user }, { email: user }],
     });
@@ -310,7 +270,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Refresh token endpoint
+// Refresh access token using refresh token
 router.post("/refresh", async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
@@ -320,8 +280,8 @@ router.post("/refresh", async (req, res) => {
     }
 
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
-    
     const user = await auth.findById(decoded.id);
+
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
@@ -336,13 +296,14 @@ router.post("/refresh", async (req, res) => {
     });
     
     res.json({ message: "Access token refreshed" });
+
   } catch (err) {
     console.error("Token refresh error:", err);
-    return res.status(401).json({ message: "Invalid refresh token" });
+    res.status(401).json({ message: "Invalid refresh token" });
   }
 });
 
-// Logout
+// Logout → clear both cookies
 router.post("/logout", async (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,

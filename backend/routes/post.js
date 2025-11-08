@@ -51,64 +51,48 @@ router.post("/post", Auth, upload.single("img"), async (req, res) => {
 // Get all posts (front page)
 router.get("/post", optionalAuth, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 6
-    const skip = (page - 1) * limit
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
 
-    // Simple approach: Mix trending and recent, then sort by a score
     const blog = await Userpost.aggregate([
       {
         $addFields: {
-          engagementScore: {
-            $add: [
-              { $multiply: [{ $size: { $ifNull: ["$like", []] } }, 2] },
-              { $multiply: [{ $size: { $ifNull: ["$comment", []] } }, 3] }
+          likeCount: { $size: { $ifNull: ["$like", []] } },
+          commentCount: { $size: { $ifNull: ["$comment", []] } },
+          isRecent: {
+            $gte: [
+              "$createdAt",
+              { $subtract: [new Date(), 7 * 24 * 60 * 60 * 1000] } // 7 days
             ]
           },
-          // Combine engagement with recency (posts from last 7 days get boost)
+          randomBoost: { $rand: {} } // random 0-1
+        }
+      },
+      {
+        $addFields: {
           finalScore: {
             $add: [
-              {
-                $multiply: [
-                  { $size: { $ifNull: ["$like", []] } }, 
-                  2
-                ]
-              },
-              {
-                $multiply: [
-                  { $size: { $ifNull: ["$comment", []] } }, 
-                  3
-                ]
-              },
-              // Boost recent posts (within 7 days)
-              {
-                $cond: [
-                  { 
-                    $gte: [
-                      "$createdAt", 
-                      { $subtract: [new Date(), 7 * 24 * 60 * 60 * 1000] }
-                    ]
-                  },
-                  10, // Boost score
-                  0
-                ]
-              }
+              { $multiply: ["$likeCount", 2] },
+              { $multiply: ["$commentCount", 3] },
+              { $cond: ["$isRecent", 10, 0] },       // recency boost
+              { $multiply: ["$randomBoost", 5] }     // random boost (0-5)
             ]
           }
         }
       },
-      { $sort: { finalScore: -1, createdAt: -1 } },
+      { $sort: { finalScore: -1 } },
       { $skip: skip },
       { $limit: limit }
-    ])
+    ]);
 
     await Userpost.populate(blog, {
       path: "author",
       select: "username profileimg"
-    })
+    });
 
-    const totalPosts = await Userpost.countDocuments()
-    const currentUserId = req.user?.id?.toString()
+    const totalPosts = await Userpost.countDocuments();
+    const currentUserId = req.user?.id?.toString();
 
     const blogs = blog.map(post => ({
       _id: post._id,
@@ -116,26 +100,24 @@ router.get("/post", optionalAuth, async (req, res) => {
       title: post.title,
       content: post.content,
       img: post.img,
-      like: post.like.length,
+      like: post.likeCount,
       isliked: currentUserId ? post.like.map(id => id.toString()).includes(currentUserId) : false,
-      comment: post.comment.length,
+      comment: post.commentCount,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
-    }))
-
-    const hasMore = skip + blog.length < totalPosts
-
-    console.log(`Page ${page}: Returned ${blog.length} posts, hasMore: ${hasMore}`)
+    }));
 
     res.status(200).json({
       message: blogs,
-      hasMore: hasMore,
-    })
+      hasMore: skip + blog.length < totalPosts
+    });
 
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.log(err);
+    res.status(500).json({ message: err.message });
   }
-})
+});
+
 
 // Get a specific post with full details + comments
 router.get("/post/:postid", optionalAuth, async (req, res) => {

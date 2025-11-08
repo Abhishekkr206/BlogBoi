@@ -1,28 +1,35 @@
 import { api } from "../../app/apiSlice";
 import { setUser, clearUser } from "../auth/authSlicer";
 
+// Inject auth-related endpoints into the base RTK Query API slice
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
+
+    // ✅ Signup Mutation
     signup: builder.mutation({
       query: (body) => ({
         url: "/auth/signup",
         method: "POST",
         body,
       }),
+
+      // Runs after mutation is successful
       async onQueryStarted(arg, api) {
         try {
           const { data } = await api.queryFulfilled;
 
-          // save user in Redux
+          // Store user in Redux
           api.dispatch(setUser(data.user));
 
-          // save user in localStorage
+          // Persist user to localStorage
           localStorage.setItem("user", JSON.stringify(data.user));
         } catch (err) {
           console.log(err);
         }
       },
     }),
+
+    // ✅ Login Mutation (email/username + password)
     login: builder.mutation({
       query: (body) => ({
         url: "/auth/login",
@@ -33,27 +40,28 @@ export const authApi = api.injectEndpoints({
         try {
           const { data } = await api.queryFulfilled;
 
-          // save user in Redux
           api.dispatch(setUser(data.user));
-
-          // save user in localStorage
           localStorage.setItem("user", JSON.stringify(data.user));
         } catch (err) {
           console.log(err);
         }
       },
     }),
+
+    // ✅ Google OAuth Mutation
     google: builder.mutation({
-      query:({token}) => ({
-        url:"/auth/google",
-        method:"POST",
-        body:{token},
+      query: ({ token }) => ({
+        url: "/auth/google",
+        method: "POST",
+        body: { token },
       }),
+
       async onQueryStarted(arg, api) {
         try {
           const { data } = await api.queryFulfilled;
-          
-          if(data.user && data.user._id){
+
+          // Only store user if full user details are returned (existing user)
+          if (data.user && data.user._id) {
             api.dispatch(setUser(data.user));
             localStorage.setItem("user", JSON.stringify(data.user));
           }
@@ -62,6 +70,8 @@ export const authApi = api.injectEndpoints({
         }
       },
     }),
+
+    // ✅ Validate OTP Mutation (used after signup)
     validateOtp: builder.mutation({
       query: (body) => ({
         url: "/auth/validateotp",
@@ -72,16 +82,15 @@ export const authApi = api.injectEndpoints({
         try {
           const { data } = await api.queryFulfilled;
 
-          // save user in Redux
           api.dispatch(setUser(data.user));
-
-          //  save user in localStorage
           localStorage.setItem("user", JSON.stringify(data.user));
         } catch (err) {
           console.log(err);
         }
       },
     }),
+
+    // ✅ Logout Mutation
     logout: builder.mutation({
       query: () => ({
         url: "/auth/logout",
@@ -91,10 +100,10 @@ export const authApi = api.injectEndpoints({
         try {
           await api.queryFulfilled;
 
-          // clear user from Redux
+          // Clear user from Redux
           api.dispatch(clearUser());
 
-          // remove from localStorage
+          // Remove from localStorage
           localStorage.removeItem("user");
         } catch (err) {
           console.log(err);
@@ -104,9 +113,10 @@ export const authApi = api.injectEndpoints({
   }),
 });
 
-export const { 
-  useSignupMutation, 
-  useLoginMutation, 
+// Export RTK Query hooks
+export const {
+  useSignupMutation,
+  useLoginMutation,
   useLogoutMutation,
   useGoogleMutation,
   useValidateOtpMutation

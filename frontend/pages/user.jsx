@@ -10,30 +10,41 @@ import { useToast } from "../components/Toast";
 import { UserRound, Pencil } from "lucide-react";
 
 export default function UserProfile() {
+
+  // Get user id from URL
   const { userid } = useParams();
+
+  // Pagination states
   const [page, setPage] = useState(1);
   const [allPosts, setAllPosts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
 
+  // API: fetch profile + posts (paginated)
   const { data, isLoading, isFetching } = useGetUserDataQuery({ userid, page });
+
+  // API: follow/unfollow actions
   const [followUser] = useFollowUserMutation();
   const [unfollowUser] = useUnfollowUserMutation();
+
+  // Profile UI states
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
-  const { showError, showMessage } = useToast();
 
+  const { showError, showMessage } = useToast();
   const navigate = useNavigate();
+
+  // Logged-in user id
   const currentUserId = useSelector((state) => state.auth.user?._id);
 
-  // Load posts when data changes
+  // ✅ When API returns data, update posts list
   useEffect(() => {
     if (data?.response?.blogs) {
       if (page === 1) {
-        // First page: replace all posts
+        // First page → replace list
         setAllPosts(data.response.blogs);
       } else {
-        // Subsequent pages: append new posts
+        // Next pages → append new posts without duplicates
         setAllPosts((prev) => {
           const newPosts = data.response.blogs.filter(
             (blog) => !prev.some((p) => p._id === blog._id)
@@ -41,11 +52,11 @@ export default function UserProfile() {
           return [...prev, ...newPosts];
         });
       }
-      
       setHasMore(data.response.hasMore);
     }
   }, [data, page]);
 
+  // ✅ Update UI states when profile data loads
   useEffect(() => {
     if (data?.response) {
       setIsFollowing(data.response.isfollowing || false);
@@ -54,6 +65,7 @@ export default function UserProfile() {
     }
   }, [data]);
 
+  // Show loading only at first page
   if (isLoading && page === 1) return <Spinner />;
 
   const user = data?.response;
@@ -61,6 +73,7 @@ export default function UserProfile() {
 
   const { username, name, profileimg, bio } = user;
 
+  // ✅ Follow / Unfollow logic
   const handleFollow = async () => {
     try {
       if (!isFollowing) {
@@ -78,89 +91,96 @@ export default function UserProfile() {
     }
   };
 
-
+  // Load next page of posts
   const fetchMore = () => setPage((prev) => prev + 1);
 
+  // Check if viewing own profile
   const isOwnProfile = currentUserId === userid;
 
-return (
-  <div className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
-    {/* Profile Header */}
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4 sm:gap-0">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {profileimg ? (
-          <img
-            src={profileimg}
-            alt={username}
-            className="w-24 h-24 sm:w-30 sm:h-30 rounded-full object-cover mx-auto sm:mx-0"
-          />
-        ) : (
-          <UserRound className="w-24 h-24 sm:w-30 sm:h-30 text-gray mx-auto sm:mx-0" />
-        )}
 
-        <div className="flex flex-col gap-2 text-center sm:text-left">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold">{username}</h2>
-              <h3 className="text-sm sm:text-md">{name}</h3>
-            </div>
+  return (
+    <div className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
-            <div className="flex justify-center sm:justify-start gap-4 text-gray-700 text-sm sm:text-md mt-2 sm:mt-0">
-              <div
-                className="hover:underline cursor-pointer"
-                onClick={() => navigate(`/user/${userid}/follower`)}
-              >
-                <span className="font-semibold">{followerCount}</span> Followers
-              </div>
-              <div
-                className="hover:underline cursor-pointer"
-                onClick={() => navigate(`/user/${userid}/following`)}
-              >
-                <span className="font-semibold">{followingCount}</span> Following
-              </div>
-            </div>
-          </div>
-
-          {bio && (
-            <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2 max-w-xs sm:max-w-md mx-auto sm:mx-0">
-              {bio}
-            </p>
+      {/* ---------- Profile Header ---------- */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4 sm:gap-0">
+        
+        {/* Profile Image + Basic info */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {profileimg ? (
+            <img
+              src={profileimg}
+              alt={username}
+              className="w-24 h-24 sm:w-30 sm:h-30 rounded-full object-cover mx-auto sm:mx-0"
+            />
+          ) : (
+            <UserRound className="w-24 h-24 sm:w-30 sm:h-30 text-gray mx-auto sm:mx-0" />
           )}
+
+          <div className="flex flex-col gap-2 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:gap-6">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold">{username}</h2>
+                <h3 className="text-sm sm:text-md">{name}</h3>
+              </div>
+
+              {/* Followers / Following Count */}
+              <div className="flex justify-center sm:justify-start gap-4 text-gray-700 text-sm sm:text-md mt-2 sm:mt-0">
+                <div
+                  className="hover:underline cursor-pointer"
+                  onClick={() => navigate(`/user/${userid}/follower`)}
+                >
+                  <span className="font-semibold">{followerCount}</span> Followers
+                </div>
+                <div
+                  className="hover:underline cursor-pointer"
+                  onClick={() => navigate(`/user/${userid}/following`)}
+                >
+                  <span className="font-semibold">{followingCount}</span> Following
+                </div>
+              </div>
+            </div>
+
+            {bio && (
+              <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2 max-w-xs sm:max-w-md mx-auto sm:mx-0">
+                {bio}
+              </p>
+            )}
+          </div>
         </div>
+
+        {/* ---------- Follow / Edit Button ---------- */}
+        {isOwnProfile ? (
+          <button
+            className="p-2 hover:bg-gray-100 rounded-full transition self-center sm:self-auto"
+            onClick={() => navigate("/user/edit")}
+          >
+            <Pencil className="w-5 h-5 text-gray-700" />
+          </button>
+        ) : (
+          <button
+            className="px-4 py-2 text-sm sm:text-lg bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition w-full sm:w-auto"
+            onClick={handleFollow}
+          >
+            {isFollowing ? "Unfollow" : "Follow"}
+          </button>
+        )}
       </div>
 
-      {/* Buttons */}
-      {isOwnProfile ? (
-        <button
-          className="p-2 hover:bg-gray-100 rounded-full transition self-center sm:self-auto"
-          onClick={() => navigate("/user/edit")}
-        >
-          <Pencil className="w-5 h-5 text-gray-700" />
-        </button>
-      ) : (
-        <button
-          className="px-4 py-2 text-sm sm:text-lg bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition w-full sm:w-auto"
-          onClick={handleFollow}
-        >
-          {isFollowing ? "Unfollow" : "Follow"}
-        </button>
-      )}
+      {/* ---------- Posts Section (Infinite Scroll) ---------- */}
+      <InfiniteScroll
+        dataLength={allPosts.length}
+        next={fetchMore}
+        hasMore={hasMore}
+        loader={<h4 className="py-4"><LoaderTwo /></h4>}
+        endMessage={<p className="text-center mb-20 sm:mb-4 text-gray-800 font-semibold">No more posts</p>}
+      >
+        <div className="flex flex-col gap-2 items-center w-full mb-5 sm:mb-10">
+          {allPosts.map((post) => (
+            <PostCard key={post._id} data={post} />
+          ))}
+        </div>
+      </InfiniteScroll>
+
     </div>
-
-    {/* Posts */}
-    <InfiniteScroll
-      dataLength={allPosts.length}
-      next={fetchMore}
-      hasMore={hasMore}
-      loader={<h4 className="py-4"><LoaderTwo /></h4>}
-      endMessage={<p className="text-center mb-20 sm:mb-4 text-gray-800 font-semibold">No more posts</p>}
-    >
-      <div className="flex flex-col gap-2 items-center w-full mb-5 sm:mb-10">
-        {allPosts.map((post) => (
-          <PostCard key={post._id} data={post} />
-        ))}
-      </div>
-    </InfiniteScroll>
-  </div>
-);
+  );
 }

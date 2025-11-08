@@ -1,22 +1,30 @@
 import { useState } from "react";
-import { useSignupMutation, useGoogleMutation, useValidateOtpMutation } from "../../features/auth/authApi";
+import {
+  useSignupMutation,
+  useGoogleMutation,
+  useValidateOtpMutation,
+} from "../../features/auth/authApi";
 import { useNavigate } from "react-router-dom";
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin } from "@react-oauth/google";
 import { LoaderOne as Spinner } from "../spinner";
-import { useToast } from "../Toast"; 
+import { useToast } from "../Toast";
 
 export default function SignupForm() {
+  // RTK Query mutations
   const [signup] = useSignupMutation();
   const [google] = useGoogleMutation();
   const [validateOtp] = useValidateOtpMutation();
-  const {showMessage} = useToast()
+
+  const { showMessage } = useToast();
   const navigate = useNavigate();
 
-  const [showOtp, setShowOtp] = useState(false);
-  const [isGoogleSignup, setIsGoogleSignup] = useState(false);
+  // UI states
+  const [showOtp, setShowOtp] = useState(false); // switch between signup form & OTP screen
+  const [isGoogleSignup, setIsGoogleSignup] = useState(false); // true when user signs up using Google
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Form input states
   const [formData, setFormData] = useState({
     profileimg: "",
     username: "",
@@ -24,81 +32,88 @@ export default function SignupForm() {
     firstName: "",
     lastName: "",
     password: "",
-    otp: ""
+    otp: "",
   });
 
+  // Handle input value change
   const handleChanges = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError("");
+    setError(""); // clear errors while typing
   };
 
+  // Google auth success handler
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const res = await google({ token: credentialResponse.credential }).unwrap();
-      
-      // Existing user - login directly
+
+      // If user already exists → login directly
       if (res.user && res.user._id) {
         localStorage.setItem("user", JSON.stringify(res.user));
         navigate("/");
       } else {
-        // New user - just need username
-        setFormData(prev => ({
+        // New Google user → auto-fill form & skip password
+        setFormData((prev) => ({
           ...prev,
           email: res.user.email,
-          firstName: res.user.name.split(' ')[0] || '',
-          lastName: res.user.name.split(' ').slice(1).join(' ') || '',
-          password: '' ,// No password needed for Google
-          profileimg: res.user.picture || null
+          firstName: res.user.name.split(" ")[0] || "",
+          lastName: res.user.name.split(" ").slice(1).join(" ") || "",
+          password: "",
+          profileimg: res.user.picture || null,
         }));
         setIsGoogleSignup(true);
       }
-      showMessage("Signed up with Google successfully")
+
+      showMessage("Signed up with Google successfully");
     } catch (err) {
       setError("Google authentication failed");
     }
   };
-  if(isLoading){
-    return(
+
+  // Loading UI while signup request is happening
+  if (isLoading) {
+    return (
       <div className="flex items-center justify-center min-h-[80vh] bg-gray-50/20">
-        <Spinner/>
+        <Spinner />
       </div>
-    )
+    );
   }
-  
+
+  // Normal or Google signup (without OTP yet)
   const handleDone = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      setIsLoading(true)
+      setIsLoading(true);
+
       const res = await signup({
         profileimg: formData.profileimg,
         username: formData.username,
         name: `${formData.firstName} ${formData.lastName}`.trim(),
         email: formData.email,
         password: formData.password || null,
-        google: isGoogleSignup
+        google: isGoogleSignup,
       }).unwrap();
 
-      // Google signup - direct login, no OTP
+      // Google signup: login instantly (no OTP)
       if (isGoogleSignup && res.user && res.user._id) {
         localStorage.setItem("user", JSON.stringify(res.user));
         navigate("/");
-      } 
-      // Regular signup - show OTP screen
+      }
+      // Normal signup: move to OTP screen
       else if (!isGoogleSignup) {
         setShowOtp(true);
       }
-      showMessage("Signup successful, please verify OTP")
+
+      showMessage("Signup successful, please verify OTP");
     } catch (err) {
-      setIsLoading(false)
       setError(err?.data?.message || "Signup failed");
-    } finally{
-      setIsLoading(false)
+    } finally {
+      setIsLoading(false);
     }
   };
 
-
+  // OTP verification handler
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError("");
@@ -109,19 +124,20 @@ export default function SignupForm() {
         otp: formData.otp,
         username: formData.username,
         name: `${formData.firstName} ${formData.lastName}`.trim(),
-        password: formData.password
+        password: formData.password,
       }).unwrap();
 
       localStorage.setItem("user", JSON.stringify(res.user));
       navigate("/");
-      showMessage("OTP verified successfully")
+      showMessage("OTP verified successfully");
     } catch (err) {
       setError(err?.data?.message || "Invalid OTP");
-    };
-  }
+    }
+  };
 
   return (
     <div className="min-h-full w-full bg-gradient-to-b from-white to-white/20 relative">
+      {/* Subtle grid BG with radial fade */}
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -136,21 +152,24 @@ export default function SignupForm() {
             "radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%)",
         }}
       />
-      
+
       <div className="flex items-center justify-center min-h-[82vh] px-4 sm:mx-0">
-        <div className=" max-w-md border rounded-lg shadow p-3 sm:p-6 bg-white z-10 mt-5">
+        <div className="max-w-md border rounded-lg shadow p-3 sm:p-6 bg-white z-10 mt-5">
           <h2 className="text-3xl font-bold text-black mb-6 text-center">
             {showOtp ? "Verify OTP" : "Sign Up"}
           </h2>
 
+          {/* Error message UI */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
               {error}
             </div>
           )}
 
+          {/* ---------------- SIGNUP FORM ---------------- */}
           {!showOtp ? (
             <>
+              {/* Google signup btn */}
               <div className="flex justify-center">
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
@@ -161,13 +180,16 @@ export default function SignupForm() {
                   shape="pill"
                 />
               </div>
+
               <div className="flex items-center gap-3 my-4">
                 <div className="flex-1 h-px bg-gray-300"></div>
                 <span className="text-sm text-gray-500">OR</span>
                 <div className="flex-1 h-px bg-gray-300"></div>
               </div>
 
+              {/* Manual signup form */}
               <form className="flex flex-col gap-4" onSubmit={handleDone}>
+                {/* Username */}
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700">Username</label>
                   <input
@@ -181,6 +203,7 @@ export default function SignupForm() {
                   />
                 </div>
 
+                {/* Email */}
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700">Email</label>
                   <input
@@ -195,6 +218,7 @@ export default function SignupForm() {
                   />
                 </div>
 
+                {/* First / Last name */}
                 <div className="flex gap-3 flex-wrap">
                   <div className="flex-1 min-w-[120px] flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">First Name</label>
@@ -220,6 +244,7 @@ export default function SignupForm() {
                   </div>
                 </div>
 
+                {/* Password (skipped for Google signup) */}
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700">Password</label>
                   <input
@@ -233,7 +258,9 @@ export default function SignupForm() {
                     className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-black disabled:bg-gray-100"
                   />
                   {isGoogleSignup && (
-                    <p className="text-xs text-gray-500 mt-1">No password needed for Google signup</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      No password needed for Google signup
+                    </p>
                   )}
                 </div>
 
@@ -258,6 +285,7 @@ export default function SignupForm() {
               </div>
             </>
           ) : (
+            /* ---------------- OTP SCREEN ---------------- */
             <form className="flex flex-col gap-4" onSubmit={handleVerifyOtp}>
               <p className="text-sm text-gray-600 text-center mb-2">
                 Enter the OTP sent to {formData.email}
