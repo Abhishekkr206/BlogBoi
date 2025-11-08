@@ -73,18 +73,20 @@ export default function FollowCard({ data }) {
                     </div>
 
                     {/* Follow Button */}
-                    {isfollowingState !== undefined && (
-                        <button
-                            className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                                isfollowingState
-                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    : 'bg-gray-900 text-white hover:bg-gray-800 shadow-sm'
-                            }`}
-                            onClick={handleFollow}
-                        >
-                            {isfollowingState ? 'Following' : 'Follow'}
-                        </button>
-                    )}
+                    {currentUserId !== person?._id &&
+                        isfollowingState !== undefined && (
+                            <button
+                                className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                                    isfollowingState
+                                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        : 'bg-gray-900 text-white hover:bg-gray-800 shadow-sm'
+                                }`}
+                                onClick={handleFollow}
+                            >
+                                {isfollowingState ? 'Following' : 'Follow'}
+                            </button>
+                        )
+                    }
                 </div>
             </div>
         </div>
