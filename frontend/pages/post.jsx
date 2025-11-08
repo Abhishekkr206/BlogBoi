@@ -198,13 +198,23 @@ export default function PostSection() {
           {currentUserId && currentUserId !== author._id && (
             <button
               onClick={handleFollow}
-              className={`flex items-center justify-center gap-1 px-3 sm:px-4 py-2 rounded-xl transition text-sm sm:text-base ${
-                following
-                  ? "bg-gray-200 text-black hover:bg-gray-300"
-                  : "bg-black text-white hover:bg-gray-800"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200
+                ${following
+                  ? "bg-gray-100 text-gray-900 border border-gray-300 hover:bg-gray-200 hover:border-gray-400"
+                  : "bg-black text-white hover:bg-gray-900"
+                }`}
             >
-              {following ? <><UserMinus className="w-4 h-4" /> Unfollow</> : <><UserPlus className="w-4 h-4" /> Follow</>}
+              {following ? (
+                <>
+                  <UserMinus className="w-4 h-4" />
+                  <span>Unfollow</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  <span>Follow</span>
+                </>
+              )}
             </button>
           )}
         </div>

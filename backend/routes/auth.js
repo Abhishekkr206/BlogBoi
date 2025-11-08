@@ -216,9 +216,62 @@ router.post("/signup", async (req, res) => {
     await transport.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Verify Your Email - OTP Code",
+      subject: `Verify Your Email - ${otp} OTP Code`,
       text: `Your OTP code is ${otp}. It will expire in 5 minutes.`,
-      html: `... HTML EMAIL TEMPLATE ...`
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin:0; padding:0; font-family: Arial, sans-serif; background:#ffffff; color:#000000;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="padding:20px; background:#ffffff;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="border:1px solid #000000; border-radius:6px; overflow:hidden;">
+
+                  <tr>
+                    <td style="background:#000000; padding:25px; text-align:center;">
+                      <h1 style="color:#ffffff; font-size:26px; margin:0;">Email Verification</h1>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:35px 30px;">
+                      <p style="font-size:16px; margin:0 0 15px;">Hello,</p>
+                      <p style="font-size:16px; margin:0 0 30px;">Use the OTP below to verify your email address:</p>
+
+                      <div style="text-align:center; margin:25px 0;">
+                        <span style="display:inline-block; border:2px solid #000000; padding:15px 25px; font-size:32px; font-weight:bold; letter-spacing:6px; font-family:'Courier New', monospace;">
+                          ${otp}
+                        </span>
+                      </div>
+
+                      <p style="font-size:14px; margin:0; text-align:center;">
+                        This code expires in <b>5 minutes</b>.
+                      </p>
+                      <p style="font-size:14px; margin:10px 0 0; text-align:center;">
+                        If you didn’t request this, please ignore the email.
+                      </p>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding:15px 30px; border-top:1px solid #000000; text-align:center;">
+                      <p style="font-size:12px; margin:0; color:#555555;">
+                        This is an automated email. Do not reply.
+                      </p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
     });
 
     res.status(200).json({ message: "OTP sent successfully" });

@@ -81,6 +81,14 @@ export default function SignupForm() {
   // Normal or Google signup (without OTP yet)
   const handleDone = async (e) => {
     e.preventDefault();
+    const { name, value } = e.target;
+    let newValue = value;
+
+    if (name === "email") {
+      newValue = newValue.replace(/\s/g, ""); // remove spaces
+      newValue = newValue.toLowerCase();     // convert to lowercase
+    }
+
     setError("");
 
     try {
@@ -104,8 +112,6 @@ export default function SignupForm() {
       else if (!isGoogleSignup) {
         setShowOtp(true);
       }
-
-      showMessage("Signup successful");
     } catch (err) {
       setError(err?.data?.message || "Signup failed");
     } finally {
@@ -195,6 +201,7 @@ export default function SignupForm() {
                   <input
                     type="text"
                     name="username"
+                    onKeyDown={(e) => e.key === " " && e.preventDefault()}
                     value={formData.username}
                     onChange={handleChanges}
                     placeholder="Enter username"
@@ -250,6 +257,7 @@ export default function SignupForm() {
                   <input
                     type="password"
                     name="password"
+                    minLength={8}
                     value={formData.password}
                     onChange={handleChanges}
                     placeholder="Enter password"

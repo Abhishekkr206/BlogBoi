@@ -1,46 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEditUserMutation } from "../features/user/userApi";
 import { useSelector } from "react-redux";
 import { useToast } from "../components/Toast";
 import { useNavigate } from "react-router-dom";
+import { LoaderOne as Spinner } from "../components/spinner";
 
 export default function ProfileEdit() {
-  // RTK mutation hook to edit user
+  // ALL HOOKS MUST COME FIRST - before any conditional returns
   const [editPost] = useEditUserMutation();
-
   const { showError, showMessage } = useToast();
   const navigate = useNavigate();
-
-  // Get current logged-in user
   const user = useSelector((state) => state.auth.user);
-  const userid = user?._id;
 
-  // Form state (text + image)
   const [formData, setFormData] = useState({
     profileimg: null,
     name: "",
     bio: "",
   });
 
-  // Loading state for submit button
   const [loading, setLoading] = useState(false);
 
-  // Handle input / file changes
+  // Update form data when user data loads
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        profileimg: user.profileimg || null,
+        name: user.name || "",
+        bio: user.bio || "",
+      });
+    }
+  }, [user]);
+
+  // NOW we can do conditional rendering after all hooks are called
+  if (!user) {
+    return <Spinner />;
+  }
+
+  const userid = user._id;
+
+  // Handle form input change (text or file)
   const handleChanges = (e) => {
     if (e.target.type === "file") {
-      setFormData({ ...formData, profileimg: e.target.files[0] });
+      const file = e.target.files[0];
+
+      // File size validation: max 5MB
+      if (file && file.size > 5 * 1024 * 1024) {
+        showError("File size must be under 5MB");
+        return;
+      }
+
+      setFormData({ ...formData, profileimg: file });
     } else {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     }
   };
 
-  // Submit form and update profile
+  // Submit profile update
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Create multipart form data for file upload
       const body = new FormData();
       body.append("name", formData.name);
       body.append("bio", formData.bio);
@@ -49,19 +69,24 @@ export default function ProfileEdit() {
         body.append("profileimg", formData.profileimg);
       }
 
-      // Send update request
       await editPost({ userid, body }).unwrap();
 
-      // Reset form & show success
       setFormData({ profileimg: null, name: "", bio: "" });
       showMessage("Profile updated successfully");
       navigate(`/user/${userid}`);
     } catch (err) {
-      console.log(err);
       showError("Failed to update profile");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to safely get image URL
+  const getProfileImageUrl = () => {
+    if (formData.profileimg instanceof File) {
+      return URL.createObjectURL(formData.profileimg);
+    }
+    return formData.profileimg || "/default-avatar.svg";
   };
 
   return (
@@ -71,21 +96,16 @@ export default function ProfileEdit() {
 
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4">
-
-            {/* Profile image preview + file input */}
+            
+            {/* Profile image preview + upload button */}
             <div className="flex flex-col gap-1 items-center">
               <div className="relative">
                 <img
-                  src={
-                    formData.profileimg
-                      ? URL.createObjectURL(formData.profileimg)
-                      : user?.profileimg || "/default-avatar.png"
-                  }
+                  src={getProfileImageUrl()}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-black/10"
+                  className="w-32 h-32 rounded-full object-cover border border-black p-1"
                 />
 
-                {/* Upload button overlay */}
                 <label
                   htmlFor="profileimg"
                   className="absolute bottom-0 right-0 bg-black text-white p-2 rounded-full cursor-pointer hover:bg-gray-800 transition"
@@ -109,9 +129,10 @@ export default function ProfileEdit() {
                   className="hidden"
                 />
               </div>
+              <p className="text-sm text-gray-600">Max file size: 5MB</p>
             </div>
 
-            {/* Name input */}
+            {/* Name field */}
             <div className="flex flex-col gap-1">
               <label className="font-medium">Name</label>
               <input
@@ -124,7 +145,7 @@ export default function ProfileEdit() {
               />
             </div>
 
-            {/* Bio input */}
+            {/* Bio field */}
             <div className="flex flex-col gap-1">
               <label className="font-medium">Bio</label>
               <textarea
@@ -137,7 +158,7 @@ export default function ProfileEdit() {
               ></textarea>
             </div>
 
-            {/* Submit button with loading spinner */}
+            {/* Submit button */}
             <button
               type="submit"
               disabled={loading}

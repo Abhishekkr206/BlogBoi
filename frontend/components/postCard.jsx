@@ -118,7 +118,7 @@ export default function PostCard({ data }) {
   return (
     <>
       <div
-        className="relative flex flex-col sm:flex-row border rounded-lg shadow-md p-3 sm:p-4 gap-3 sm:gap-4 items-start sm:items-center w-full max-w-md sm:min-w-3xl mx-auto py-4 sm:py-8 bg-white z-10 cursor-pointer"
+        className="relative flex flex-col sm:flex-row border rounded-lg shadow-md p-3 sm:p-4 gap-3 sm:gap-4 items-start sm:items-center w-full max-w-md sm:max-w-3xl mx-auto py-4 sm:py-8 bg-white z-10 cursor-pointer"
         onClick={() => navigate(`/post/${_id}`)}
       >
 

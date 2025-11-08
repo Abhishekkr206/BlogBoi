@@ -7,7 +7,7 @@ import { LoaderOne as Spinner } from "../components/spinner";
 import { LoaderTwo } from "../components/spinner";
 import PostCard from "../components/postCard";
 import { useToast } from "../components/Toast";
-import { UserRound, Pencil } from "lucide-react";
+import { UserRound, UserPlus, UserMinus ,Pencil } from "lucide-react";
 
 export default function UserProfile() {
 
@@ -124,19 +124,22 @@ export default function UserProfile() {
               </div>
 
               {/* Followers / Following Count */}
-              <div className="flex justify-center sm:justify-start gap-4 text-gray-700 text-sm sm:text-md mt-2 sm:mt-0">
-                <div
-                  className="hover:underline cursor-pointer"
+              <div className="flex justify-center sm:justify-start gap-6 text-gray-600 text-sm sm:text-base mt-2 sm:mt-0">
+                <button
                   onClick={() => navigate(`/user/${userid}/follower`)}
+                  className="flex items-center gap-1 hover:text-black hover:underline transition "
                 >
-                  <span className="font-semibold">{followerCount}</span> Followers
-                </div>
-                <div
-                  className="hover:underline cursor-pointer"
+                  <span className="font-semibold text-black">{followerCount}</span>
+                  <span>Followers</span>
+                </button>
+
+                <button
                   onClick={() => navigate(`/user/${userid}/following`)}
+                  className="flex items-center gap-1 hover:text-black hover:underline transition"
                 >
-                  <span className="font-semibold">{followingCount}</span> Following
-                </div>
+                  <span className="font-semibold text-black">{followingCount}</span>
+                  <span>Following</span>
+                </button>
               </div>
             </div>
 
@@ -151,16 +154,24 @@ export default function UserProfile() {
         {/* ---------- Follow / Edit Button ---------- */}
         {isOwnProfile ? (
           <button
-            className="p-2 hover:bg-gray-100 rounded-full transition self-center sm:self-auto"
             onClick={() => navigate("/user/edit")}
+            className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition flex items-center justify-center"
+            title="Edit Profile"
           >
             <Pencil className="w-5 h-5 text-gray-700" />
           </button>
         ) : (
           <button
-            className="px-4 py-2 text-sm sm:text-lg bg-black text-white rounded-md font-semibold hover:bg-gray-800 transition w-full sm:w-auto"
             onClick={handleFollow}
+            className={`flex items-center gap-2 justify-center px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 w-full sm:w-auto
+              ${
+                isFollowing
+                  ? "bg-gray-100 text-gray-900 border border-gray-300 hover:bg-gray-200 hover:border-gray-400"
+                  : "bg-gray-900/95 text-white hover:bg-gray-900"
+              }
+            `}
           >
+            {isFollowing ? <UserMinus className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
             {isFollowing ? "Unfollow" : "Follow"}
           </button>
         )}

@@ -13,23 +13,17 @@ export const authApi = api.injectEndpoints({
         body,
       }),
 
-      // Runs after mutation is successful
       async onQueryStarted(arg, api) {
         try {
           const { data } = await api.queryFulfilled;
 
-          // Store user in Redux
           api.dispatch(setUser(data.user));
-
-          // Persist user to localStorage
           localStorage.setItem("user", JSON.stringify(data.user));
-        } catch (err) {
-          console.log(err);
-        }
+        } catch (err) {}
       },
     }),
 
-    // ✅ Login Mutation (email/username + password)
+    // ✅ Login Mutation
     login: builder.mutation({
       query: (body) => ({
         url: "/auth/login",
@@ -42,9 +36,7 @@ export const authApi = api.injectEndpoints({
 
           api.dispatch(setUser(data.user));
           localStorage.setItem("user", JSON.stringify(data.user));
-        } catch (err) {
-          console.log(err);
-        }
+        } catch (err) {}
       },
     }),
 
@@ -60,18 +52,15 @@ export const authApi = api.injectEndpoints({
         try {
           const { data } = await api.queryFulfilled;
 
-          // Only store user if full user details are returned (existing user)
           if (data.user && data.user._id) {
             api.dispatch(setUser(data.user));
             localStorage.setItem("user", JSON.stringify(data.user));
           }
-        } catch (err) {
-          console.log(err);
-        }
+        } catch (err) {}
       },
     }),
 
-    // ✅ Validate OTP Mutation (used after signup)
+    // ✅ Validate OTP Mutation
     validateOtp: builder.mutation({
       query: (body) => ({
         url: "/auth/validateotp",
@@ -84,9 +73,7 @@ export const authApi = api.injectEndpoints({
 
           api.dispatch(setUser(data.user));
           localStorage.setItem("user", JSON.stringify(data.user));
-        } catch (err) {
-          console.log(err);
-        }
+        } catch (err) {}
       },
     }),
 
@@ -100,14 +87,9 @@ export const authApi = api.injectEndpoints({
         try {
           await api.queryFulfilled;
 
-          // Clear user from Redux
           api.dispatch(clearUser());
-
-          // Remove from localStorage
           localStorage.removeItem("user");
-        } catch (err) {
-          console.log(err);
-        }
+        } catch (err) {}
       },
     }),
   }),
