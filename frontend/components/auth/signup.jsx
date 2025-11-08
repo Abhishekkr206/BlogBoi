@@ -63,7 +63,7 @@ export default function SignupForm() {
         setIsGoogleSignup(true);
       }
 
-      showMessage("Signed up with Google successfully");
+      showMessage("Signed up with Google");
     } catch (err) {
       setError("Google authentication failed");
     }
@@ -105,7 +105,7 @@ export default function SignupForm() {
         setShowOtp(true);
       }
 
-      showMessage("Signup successful, please verify OTP");
+      showMessage("Signup successful");
     } catch (err) {
       setError(err?.data?.message || "Signup failed");
     } finally {

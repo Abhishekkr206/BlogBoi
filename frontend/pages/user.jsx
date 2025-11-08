@@ -69,7 +69,7 @@ export default function UserProfile() {
   if (isLoading && page === 1) return <Spinner />;
 
   const user = data?.response;
-  if (!user) return <p>User not found</p>;
+  if (!user) return <p className="text-center">User not found</p>;
 
   const { username, name, profileimg, bio } = user;
 
