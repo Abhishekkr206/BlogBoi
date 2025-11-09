@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Abhishekkr206/BlogBoi/main/frontend/public/logo.png" width="140" />
+  <br/>
+  <b>BlogBoi</b>
+</p>
+
 # BlogBoi
 
 BlogBoi is a full-stack blogging platform focused on performance, clean UI, and scalable architecture.
