@@ -1,8 +1,9 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/Abhishekkr206/BlogBoi/main/frontend/public/logo.png" width="140" />
   <br/>
-  <h1>BlogBoi</h1>
 </p>
+
+# BlogBoi
 
 BlogBoi is a full-stack blogging platform focused on performance, clean UI, and scalable architecture.
 It supports full CRUD blog operations, JWT + Google OAuth authentication, Redis caching, and a fully responsive frontend built using React + RTK Query + Tailwind CSS.
