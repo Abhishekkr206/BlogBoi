@@ -1,6 +1,9 @@
+version: "3.9"
+
 services:
   mongodb:
     image: mongo:latest
+    container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
@@ -9,10 +12,10 @@ services:
       - blog-network
 
   backend:
+    container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: development
     ports:
       - "5500:5500"
     env_file:
@@ -24,21 +27,6 @@ services:
     networks:
       - blog-network
     restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "5173:5173"
-    env_file:
-      - ./frontend/.env
-    environment:
-      - VITE_API_URL=http://localhost:5500
-    depends_on:
-      - backend
-    networks:
-      - blog-network
 
 networks:
   blog-network:

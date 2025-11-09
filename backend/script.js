@@ -15,7 +15,7 @@ const app = express()
 const PORT = process.env.PORT;
 const MONGO_URL = process.env.MONGO_URL
 console.log("PORT:", process.env.PORT);
-console.log("MONGO_URL", process.env.MONGO_URL);
+console.log("monogdb connected");
 
 
 app.use(morgan("dev"))
