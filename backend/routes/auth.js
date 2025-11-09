@@ -18,6 +18,13 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 // Google OAuth client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 // Express router setup
 const router = express.Router();
 router.use(express.json());
@@ -46,22 +53,23 @@ const uploadGoogleImageToCloudinary = async (imageUrl) => {
 
 // Store access & refresh tokens in cookies
 const setAuthCookies = (res, accessToken, refreshToken) => {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true,           // Always true for production (HTTPS)
+    sameSite: "None",       // Required for cross-origin cookies
+    path: "/",
+  };
+
   // Access token (15 mins)
   res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    ...cookieOptions,
     maxAge: 15 * 60 * 1000,
-    sameSite: "Lax",
-    path: "/",
   });
 
   // Refresh token (7 days)
   res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: "Lax",
-    path: "/",
   });
 };
 
@@ -252,7 +260,7 @@ router.post("/signup", async (req, res) => {
                         This code expires in <b>5 minutes</b>.
                       </p>
                       <p style="font-size:14px; margin:10px 0 0; text-align:center;">
-                        If you didn’t request this, please ignore the email.
+                        If you didn't request this, please ignore the email.
                       </p>
                     </td>
                   </tr>
@@ -343,9 +351,10 @@ router.post("/refresh", async (req, res) => {
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
+      sameSite: "None",
       maxAge: 15 * 60 * 1000,
-      sameSite: "Lax",
+      path: "/",
     });
     
     res.json({ message: "Access token refreshed" });
@@ -360,15 +369,15 @@ router.post("/refresh", async (req, res) => {
 router.post("/logout", async (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Lax",
+    secure: true,
+    sameSite: "None",
     path: "/",
   });
   
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Lax",
+    secure: true,
+    sameSite: "None",
     path: "/",
   });
   
