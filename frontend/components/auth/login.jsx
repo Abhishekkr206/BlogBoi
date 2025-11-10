@@ -36,13 +36,13 @@ export default function LoginForm() {
       if (res.user && res.user._id) {
         localStorage.setItem("user", JSON.stringify(res.user));
         navigate("/");
+        showMessage("Logged in with Google successfully");
       } 
       else {
         // If new Google user → go to signup page
         navigate("/register/details");
       }
 
-      showMessage("Logged in with Google successfully");
     } catch (err) {
       setError("Google authentication failed");
     }
@@ -73,7 +73,7 @@ export default function LoginForm() {
 
   return (
     <>
-      <div className="min-h-full bg-gradient-to-b from-white to-white/20 relative mx-2 sm:mx-0">
+      <div className="min-h-full bg-gradient-to-b from-white to-white/20 relative mx-3 sm:mx-0">
 
         {/* Subtle background grid effect */}
         <div
@@ -113,7 +113,7 @@ export default function LoginForm() {
                 onError={() => setError("Google authentication failed")}
                 text="signin_with"
                 size="large"
-                width="350"
+                width="300"
                 shape="pill"
               />
             </div>

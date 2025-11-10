@@ -90,7 +90,7 @@ export default function ProfileEdit() {
   };
 
   return (
-    <div className="min-h-screen bg-white/10 text-black px-8 py-5">
+    <div className="min-h-screen bg-white/10 text-black px-6 py-5">
       <div className="max-w-xl mx-auto">
         <h2 className="text-2xl font-semibold mb-6">Edit Profile</h2>
 

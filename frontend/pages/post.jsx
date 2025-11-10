@@ -185,8 +185,11 @@ export default function PostSection() {
 
   // comments panel style (desktop = fixed height + scroll; mobile/tablet = natural)
   const commentsPanelStyle = commentsHeight
-    ? { height: commentsHeight, overflowY: "auto" }
-    : {};
+    ? {
+        height: Math.max(commentsHeight, 600), // 👈 ensures at least 600px tall
+        overflowY: "auto",
+      }
+    : { minHeight: 600 }; // 👈 fallback for mobile/tablet (no fixed height)
 
   // only set scrollableTarget when we actually have a scrollable container
   const scrollableProps = commentsHeight
@@ -199,7 +202,7 @@ export default function PostSection() {
       {/* LEFT: POST (natural height) */}
       <div
         ref={leftRef}
-        className="w-full lg:flex-1 lg:basis-7/10 border rounded-lg shadow-md p-6 flex flex-col gap-4 bg-white"
+        className="w-full lg:flex-1 lg:basis-7/10 border rounded-lg shadow-md p-4 sm:p-6 flex flex-col gap-4 bg-white"
       >
         {/* Author + Follow */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -227,7 +230,7 @@ export default function PostSection() {
           {currentUserId && currentUserId !== author._id && (
             <button
               onClick={handleFollow}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200
                 ${following
                   ? "bg-gray-100 text-gray-900 border border-gray-300 hover:bg-gray-200 hover:border-gray-400"
                   : "bg-black text-white hover:bg-gray-900"
