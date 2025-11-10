@@ -158,7 +158,7 @@ export default function SignupForm() {
       />
 
       <div className="flex items-center justify-center min-h-[82vh] px-4 sm:mx-0">
-        <div className="max-w-md border rounded-lg shadow p-3 sm:p-6 bg-white z-10 mt-5 mx-3 sm:mx-0">
+        <div className="max-w-md border rounded-lg shadow p-2 sm:p-6 bg-white z-10 mt-5 mx-3 sm:mx-0">
           <h2 className="text-3xl font-bold text-black mb-6 text-center">
             {showOtp ? "Verify OTP" : "Sign Up"}
           </h2>
@@ -180,7 +180,7 @@ export default function SignupForm() {
                   onError={() => setError("Google authentication failed")}
                   text="signup_with"
                   size="large"
-                  width="320"
+                  width="300"
                   shape="pill"
                 />
               </div>
