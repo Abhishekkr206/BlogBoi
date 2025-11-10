@@ -68,7 +68,7 @@ export default function Home() {
         }
       >
         {/* Render all post cards */}
-        <div className="flex flex-col justify-start items-center gap-5 py-5 px-1 w-full">
+        <div className="flex flex-col justify-start items-center gap-5 py-5 px-2.5 w-full">
           {allPosts.map((post) => (
             <PostCard key={post._id} data={post} />
           ))}
