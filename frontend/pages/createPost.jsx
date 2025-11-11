@@ -67,6 +67,17 @@ export default function CreatePost() {
 
   // Submit post
   const handleSubmit = async () => {
+
+  if (!postData.title.trim()) {
+    showError("Title is required");
+    return;
+  }
+
+  if (!postData.content || !postData.content.trim()) {
+    showError("Content is required");
+    return;
+  }
+  
     try {
       setIsLoading(true)
 

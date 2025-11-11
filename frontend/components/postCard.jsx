@@ -126,7 +126,7 @@ export default function PostCard({ data }) {
         {isProfileSection && isAuthor && (
           <button
             onClick={deletePostHandler}
-            className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-black transition-colors duration-200 z-50"
+            className="absolute top-2 right-2 sm:top-0 sm:right-2 p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-black transition-colors duration-200 z-50"
             aria-label="Delete post"
           >
             <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />

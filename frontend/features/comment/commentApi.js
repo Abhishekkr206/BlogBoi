@@ -171,7 +171,7 @@ export const commentApi = api.injectEndpoints({
     ───────────────────────────────────────────────── */
     deleteReply: builder.mutation({
       query: ({ commentId, replyId }) => ({
-        url: `blog/comment/${replyId}/reply/`,
+        url: `blog/${commentId}/${replyId}/reply/`,
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { replyId, commentId }) => [

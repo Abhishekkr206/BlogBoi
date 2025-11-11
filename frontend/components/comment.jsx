@@ -10,12 +10,14 @@ export default function CommentCard({ comments }) {
   const [replyText, setReplyText] = useState("");
   const [page, setPage] = useState(1);
   const [allReplies, setAllReplies] = useState([]);
+  const [totalReplies, setTotalReplies] = useState(0);
   const { showError, showMessage } = useToast();
 
   const { data: replyData, isLoading } = useGetRepliesQuery(
     { commentId: comments._id, page },
     { skip: !showReplies }
   );
+  console.log(comments)
   
   const [addReply] = useAddReplyMutation();
   const [deleteReply] = useDeleteReplyMutation();
@@ -31,8 +33,9 @@ export default function CommentCard({ comments }) {
   useEffect(() => {
     setPage(1);
     setAllReplies([]);
+    setTotalReplies(comments.reply.length);
   }, [_id]);
-
+  
   // Accumulate replies when data changes
   useEffect(() => {
     if (replyData?.message) {
@@ -80,6 +83,7 @@ export default function CommentCard({ comments }) {
       }).unwrap();
       setReplyText("");
       setPage(1); // Reset to first page to see new reply
+      setTotalReplies((prev) => prev + 1);
       showMessage("Reply added successfully");
     } catch (err) {
       console.error("Add reply failed:", err);
@@ -94,6 +98,7 @@ export default function CommentCard({ comments }) {
         replyId,
         postId: post,
       }).unwrap();
+      setTotalReplies((prev) => prev - 1);
       showError("Reply deleted successfully");
     } catch (err) {
       console.error("Delete reply failed:", err);
@@ -156,7 +161,7 @@ export default function CommentCard({ comments }) {
         >
           {showReplies ? "Hide Replies " : "Reply"}
         </button>
-        <p className="text-sm">({allReplies.length})</p>
+        <p className="text-sm">({totalReplies})</p>
       </div>
 
       {/* Reply section */}
