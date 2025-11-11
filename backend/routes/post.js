@@ -445,8 +445,9 @@ router.get("/comment/:commentid/reply", async (req, res) => {
 });
 
 // Delete a reply
-router.delete("/comment/:replyid/reply", Auth, async (req, res) => {
+router.delete("/:commentid/:replyid/reply", Auth, async (req, res) => {
   try {
+    const commentid = req.params.commentid
     const replyid = req.params.replyid
     const userid = req.user.id
     const reply = await Comment.findById(replyid)
@@ -459,7 +460,7 @@ router.delete("/comment/:replyid/reply", Auth, async (req, res) => {
     }
 
     await Comment.deleteOne({ _id: replyid, author: userid })
-    await Comment.findByIdAndUpdate(reply._id, { $pull: { reply: replyid } })
+    await Comment.findByIdAndUpdate(commentid, { $pull: { reply: replyid } })
 
     res.status(200).json({ message: "your reply deleted" })
   } catch (err) {
