@@ -163,18 +163,18 @@ export default function CommentCard({ comments }) {
       {showReplies && (
         <div className="mt-4 space-y-3">
           {/* Reply input */}
-          <form onSubmit={handleReplySubmit} className="flex gap-2">
+          <form onSubmit={handleReplySubmit} className="flex justify-center items-center gap-2 mx-2">
             <input
               type="text"
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Write a reply..."
-              className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
+              className="flex-1 px-2 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
             />
             <button
               type="submit"
               disabled={!replyText.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               Send
             </button>

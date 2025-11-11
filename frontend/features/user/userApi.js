@@ -57,7 +57,10 @@ export const userApi = api.injectEndpoints({
       },
 
       // Force refetch user data after edit
-      invalidatesTags: (result, error, { userid }) => [{ type: "User", id: userid }],
+      invalidatesTags: (result, error, { userid }) => 
+        [{ type: "User", id: userid},        
+         { type: "Post", id: "LIST" }, 
+        ],
     }),
 
     /* ────────────────────────────────────────────────
