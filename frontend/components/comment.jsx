@@ -1,6 +1,11 @@
-import { useState, useEffect, } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDeleteCommentMutation, useGetRepliesQuery, useAddReplyMutation, useDeleteReplyMutation } from "../features/comment/commentApi";
+import {
+  useDeleteCommentMutation,
+  useGetRepliesQuery,
+  useAddReplyMutation,
+  useDeleteReplyMutation,
+} from "../features/comment/commentApi";
 import { Trash2, UserRound } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useToast } from "../components/Toast";
@@ -17,8 +22,7 @@ export default function CommentCard({ comments }) {
     { commentId: comments._id, page },
     { skip: !showReplies }
   );
-  console.log(comments)
-  
+
   const [addReply] = useAddReplyMutation();
   const [deleteReply] = useDeleteReplyMutation();
   const [deleteComment] = useDeleteCommentMutation();
@@ -29,21 +33,17 @@ export default function CommentCard({ comments }) {
 
   const hasMore = replyData?.hasMore || false;
 
-  // Reset replies when comment changes
   useEffect(() => {
     setPage(1);
     setAllReplies([]);
     setTotalReplies(comments.reply.length);
   }, [_id]);
-  
-  // Accumulate replies when data changes
+
   useEffect(() => {
     if (replyData?.message) {
       if (page === 1) {
-        // First page: replace all replies
         setAllReplies(replyData.message);
       } else {
-        // Subsequent pages: append new replies
         setAllReplies((prev) => {
           const newReplies = replyData.message.filter(
             (reply) => !prev.some((r) => r._id === reply._id)
@@ -63,10 +63,13 @@ export default function CommentCard({ comments }) {
     e.stopPropagation();
     if (user?._id !== author?._id) return;
     try {
-      await deleteComment({ authorId: author._id, postId: post, commentId: _id }).unwrap();
+      await deleteComment({
+        authorId: author._id,
+        postId: post,
+        commentId: _id,
+      }).unwrap();
       showError("Comment deleted successfully");
     } catch (err) {
-      console.error("Delete comment failed:", err);
       showError("Failed to delete comment. Please try again.");
     }
   };
@@ -82,11 +85,10 @@ export default function CommentCard({ comments }) {
         postid: post,
       }).unwrap();
       setReplyText("");
-      setPage(1); // Reset to first page to see new reply
+      setPage(1);
       setTotalReplies((prev) => prev + 1);
       showMessage("Reply added successfully");
     } catch (err) {
-      console.error("Add reply failed:", err);
       showError("Failed to add reply. Please try again.");
     }
   };
@@ -101,7 +103,6 @@ export default function CommentCard({ comments }) {
       setTotalReplies((prev) => prev - 1);
       showError("Reply deleted successfully");
     } catch (err) {
-      console.error("Delete reply failed:", err);
       showError("Failed to delete reply. Please try again.");
     }
   };
@@ -122,15 +123,14 @@ export default function CommentCard({ comments }) {
         </button>
       )}
 
-      {/* User info */}
       <div className="flex items-center gap-3 pr-8">
         {author.profileimg ? (
-        <img
-          src={author.profileimg }
-          alt={author.username}
-          className="w-11 h-11 rounded-full ring-2 ring-gray-50 object-cover border cursor-pointer flex-shrink-0"
-        />
-        ) :(
+          <img
+            src={author.profileimg}
+            alt={author.username}
+            className="w-11 h-11 rounded-full ring-2 ring-gray-50 object-cover border cursor-pointer flex-shrink-0"
+          />
+        ) : (
           <UserRound className="w-11 h-11 text-gray-700 border rounded-full p-0.5 space-y-1 font-medium flex-shrink-0" />
         )}
         <div className="min-w-0 flex-1">
@@ -145,17 +145,17 @@ export default function CommentCard({ comments }) {
         </div>
       </div>
 
-      {/* Comment text */}
       <div className="mt-3">
-        <p className="text-gray-700 text-sm leading-relaxed break-words">{content}</p>
+        <p className="text-gray-700 text-sm leading-relaxed break-words">
+          {content}
+        </p>
       </div>
 
-      {/* Reply button */}
       <div className="mt-3 flex">
         <button
           onClick={() => {
             setShowReplies(!showReplies);
-            if (!showReplies) setPage(1); // Reset page when opening
+            if (!showReplies) setPage(1);
           }}
           className="text-gray-900 text-sm font-semibold hover:text-gray-700 transition-colors"
         >
@@ -164,11 +164,12 @@ export default function CommentCard({ comments }) {
         <p className="text-sm">({totalReplies})</p>
       </div>
 
-      {/* Reply section */}
       {showReplies && (
         <div className="mt-4 space-y-3">
-          {/* Reply input */}
-          <form onSubmit={handleReplySubmit} className="flex justify-center items-center gap-2 mx-1">
+          <form
+            onSubmit={handleReplySubmit}
+            className="flex justify-center items-center gap-2 mx-1"
+          >
             <input
               type="text"
               value={replyText}
@@ -185,19 +186,23 @@ export default function CommentCard({ comments }) {
             </button>
           </form>
 
-          {/* Replies list */}
           {isLoading && page === 1 ? (
-            <div className="text-sm text-gray-500 text-center py-2">Loading replies...</div>
+            <div className="text-sm text-gray-500 text-center py-2">
+              Loading replies...
+            </div>
           ) : allReplies.length > 0 ? (
             <div className="space-y-3 pl-4 border-l-2 border-gray-100">
               {allReplies.map((reply) => (
-                <div key={reply._id} className="flex items-start gap-2 group min-w-0">
+                <div
+                  key={reply._id}
+                  className="flex items-start gap-2 group min-w-0"
+                >
                   {reply.author?.profileimg ? (
-                  <img
-                    src={reply.author?.profileimg }
-                    alt={reply.author?.username}
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                  />
+                    <img
+                      src={reply.author?.profileimg}
+                      alt={reply.author?.username}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    />
                   ) : (
                     <UserRound className="w-8 h-8 text-gray flex-shrink-0" />
                   )}
@@ -210,7 +215,9 @@ export default function CommentCard({ comments }) {
                         {new Date(reply.createdAt).toLocaleString()}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 mt-1 break-words">{reply.content}</p>
+                    <p className="text-sm text-gray-700 mt-1 break-words">
+                      {reply.content}
+                    </p>
                   </div>
                   {user?._id === reply.author?._id && (
                     <button
@@ -224,7 +231,6 @@ export default function CommentCard({ comments }) {
                 </div>
               ))}
 
-              {/* Load More Button */}
               {hasMore && (
                 <button
                   onClick={loadMoreReplies}
@@ -236,7 +242,9 @@ export default function CommentCard({ comments }) {
               )}
             </div>
           ) : (
-            <div className="text-sm text-gray-500 text-center py-2">No replies yet</div>
+            <div className="text-sm text-gray-500 text-center py-2">
+              No replies yet
+            </div>
           )}
         </div>
       )}
