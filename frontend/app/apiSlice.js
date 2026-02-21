@@ -1,6 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { setUser, clearUser } from "../auth/authSlicer";
-import { api } from "../../app/apiSlice";
+import { setUser, clearUser } from "../features/auth/authSlicer";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
