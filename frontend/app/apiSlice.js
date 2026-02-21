@@ -1,4 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { setUser, clearUser } from "../auth/authSlicer";
+import { api } from "../../app/apiSlice";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
@@ -26,6 +28,8 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
     } else {
       console.log("❌ Refresh failed → forcing logout");
       window.location.href = "/login";
+      api.dispatch(clearUser());
+      localStorage.removeItem("user");
     }
   }
 
