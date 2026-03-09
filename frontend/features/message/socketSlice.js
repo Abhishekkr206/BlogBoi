@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-export const socket = io("http://localhost:5500", {
+export const socket = io("https://api.blogboi.fun", {
   withCredentials: true,
   autoConnect: true,
 });

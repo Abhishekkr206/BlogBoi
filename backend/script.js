@@ -36,6 +36,7 @@ app.use(express.json())
 app.use(cors({
   origin: [
     "https://blogboi.vercel.app",
+    "https://blogboi.fun",
     "http://localhost:5173"  // Keep for local development
   ],
   credentials: true,
@@ -49,6 +50,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "https://blogboi.vercel.app",
+      "https://blogboi.fun",
       "http://localhost:5173" // Keep for local development
     ],
     credentials: true
