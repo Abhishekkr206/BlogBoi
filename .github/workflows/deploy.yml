@@ -1,0 +1,63 @@
+name: Deploy BlogBoi Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+
+jobs:
+  deploy:
+    name: Build and Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code on GitHub's server
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Login to GitHub Container Registry (ghcr.io)
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 3: Build Docker image from ./backend and push to ghcr.io
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/abhishekkr206/blogboi-backend:latest
+
+      # Step 4: SSH into EC2 and deploy the new image
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Login to ghcr.io on EC2
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull the latest image
+            docker pull ghcr.io/abhishekkr206/blogboi-backend:latest
+
+            # Stop and remove old container if running
+            docker stop blogboi-backend || true
+            docker rm blogboi-backend || true
+
+            # Run new container
+            docker run -d \
+              --name blogboi-backend \
+              --restart unless-stopped \
+              -p 5500:5500 \
+              --env-file /home/ubuntu/blogboi/.env \
+              ghcr.io/abhishekkr206/blogboi-backend:latest
+
+            # Cleanup old unused images
+            docker image prune -f

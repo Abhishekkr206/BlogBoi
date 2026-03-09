@@ -29,6 +29,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.3",
+    "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13"
   },

@@ -7,7 +7,7 @@ import { LoaderOne as Spinner } from "../components/spinner";
 import { LoaderTwo } from "../components/spinner";
 import PostCard from "../components/postCard";
 import { useToast } from "../components/Toast";
-import { UserRound, UserPlus, UserMinus ,Pencil } from "lucide-react";
+import { UserRound, UserPlus, UserMinus ,Pencil ,MessageSquare } from "lucide-react";
 
 export default function UserProfile() {
 
@@ -161,19 +161,36 @@ export default function UserProfile() {
             <Pencil className="w-5 h-5 text-gray-700" />
           </button>
         ) : (
-          <button
-            onClick={handleFollow}
-            className={`flex items-center gap-2 justify-center px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 w-full sm:w-auto
-              ${
-                isFollowing
-                  ? "bg-gray-100 text-gray-900 border border-gray-300 hover:bg-gray-200 hover:border-gray-400"
-                  : "bg-gray-900/95 text-white hover:bg-gray-900"
-              }
-            `}
-          >
-            {isFollowing ? <UserMinus className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-            {isFollowing ? "Unfollow" : "Follow"}
-          </button>
+          <div>
+            <button
+              onClick={handleFollow}
+              className={`flex items-center gap-2 justify-center px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 w-full sm:w-auto
+                ${
+                  isFollowing
+                    ? "bg-gray-100 text-gray-900 border border-gray-300 hover:bg-gray-200 hover:border-gray-400"
+                    : "bg-gray-900 text-white hover:bg-gray-700"
+                }
+              `}
+            >
+              {isFollowing ? <UserMinus className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+              {isFollowing ? "Unfollow" : "Follow"}
+            </button>
+            <button
+              onClick={() =>
+                navigate(`/chat/${user._id}`, {
+                  state: {
+                    userid: user._id,
+                    username: user.username,
+                    profileimg: user.profileimg,
+                  },
+                })
+              }              
+              className={`flex items-center gap-2 justify-center px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 w-full sm:w-auto mt-2 bg-gray-900 text-white hover:bg-gray-700`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              Message
+            </button>
+          </div>
         )}
       </div>
 

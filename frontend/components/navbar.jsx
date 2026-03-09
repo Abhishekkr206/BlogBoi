@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, Home, User, PlusCircle, Bell, UserRound, LogOut } from "lucide-react";
+import { Menu, Home, User, PlusCircle, Bell, UserRound, LogOut, MessageSquare } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useLogoutMutation } from "../features/auth/authApi";
 
@@ -15,6 +15,7 @@ export function Sidebar({ isExpanded, setIsExpanded }) {
     // { icon: Bell, label: "Notification", path: "/notifications" },
     { icon: User, label: "Profile", path: `/user/${user}` },
     { icon: PlusCircle, label: "New Post", path: "/creat" },
+    { icon: MessageSquare, label: "Chat", path: "/chat" },
   ];
 
   const handleLogout = async () => {
