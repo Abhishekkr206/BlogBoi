@@ -1,17 +1,23 @@
+require("dotenv").config();
+
 const express = require("express")
 const morgan = require("morgan")
 const helmet = require("helmet")
 const mongoose = require("mongoose")
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
+const http = require("http")
+const { Server } = require("socket.io")
 
+const socketHandler = require("./socket/socketHandler")
 const authRoute = require("./routes/auth")
 const blogRoute = require("./routes/post")
+const messageRoute = require("./routes/message")
 
 require('./config/redis');
-require("dotenv").config();
 
 const app = express()
+const server = http.createServer(app)
 const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL
 
@@ -38,9 +44,23 @@ app.use(cors({
   exposedHeaders: ['set-cookie']
 }));
 
+// Socket.IO setup
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "https://blogboi.vercel.app",
+      "http://localhost:5173" // Keep for local development
+    ],
+    credentials: true
+  }
+});
+
+socketHandler(io)
+
 // Routes
 app.use("/auth", authRoute);
 app.use("/blog", blogRoute);
+app.use("/chat", messageRoute);
 
 // Health check endpoint
 app.get("/", (req, res) => {
@@ -51,7 +71,7 @@ app.get("/", (req, res) => {
 mongoose.connect(MONGO_URL)
   .then(() => {
     console.log("MongoDB connected successfully");
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   })

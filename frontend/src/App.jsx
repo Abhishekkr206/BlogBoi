@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Navbar, Sidebar } from "../components/navbar";
 import Home from "../pages/home";
 import PostSection from "../pages/post";
@@ -10,20 +10,20 @@ import SignupForm from "../components/auth/signup";
 import LoginForm from "../components/auth/login";
 import FollowingPage from "../pages/following";
 import FollowerPage from "../pages/follower";
+import ChatPage from "../pages/message";
+import ChatLayout from "../layout/chatLayout";
+import EmptyState from "../pages/emptyState";
+
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../features/auth/authSlicer";
 
-export default function App() {
-
-  // Controls sidebar expanded/collapsed state
+function AppLayout() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-
   const dispatch = useDispatch();
+  const location = useLocation();
 
-  // Logged-in user id from Redux
   const user = useSelector((state) => state.auth.user?._id);
 
-  // ✅ Load user from localStorage on page refresh
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -31,60 +31,53 @@ export default function App() {
     }
   }, [dispatch]);
 
+  const isChat = location.pathname.startsWith("/chat");
+
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
+      <Route
+        path="/register/details"
+        element={
+          <div className="flex flex-col h-screen">
+            <Navbar />
+            <SignupForm />
+          </div>
+        }
+      />
 
-        {/* ────────────────────────────────────────────────
-            🔐 AUTH ROUTES (Navbar only, no Sidebar)
-        ──────────────────────────────────────────────── */}
-        <Route
-          path="/register/details"
-          element={
-            <div className="flex flex-col h-screen">
-              <Navbar />
-              <SignupForm />
-            </div>
-          }
-        />
+      <Route
+        path="/login"
+        element={
+          <div className="flex flex-col h-screen">
+            <Navbar />
+            <LoginForm />
+          </div>
+        }
+      />
 
-        <Route
-          path="/login"
-          element={
-            <div className="flex flex-col h-screen">
-              <Navbar />
-              <LoginForm />
-            </div>
-          }
-        />
-
-        {/* ────────────────────────────────────────────────
-            🌐 MAIN APP ROUTES (Navbar + Sidebar)
-        ──────────────────────────────────────────────── */}
-        <Route
-          path="/*"
-          element={
-            <div className="flex h-screen">
-
-              {/* Sidebar always exists but can shrink/expand */}
+      <Route
+        path="/*"
+        element={
+          <div className="flex h-screen">
+            <div className="app-sidebar">
               <Sidebar
                 isExpanded={isSidebarExpanded}
                 setIsExpanded={setIsSidebarExpanded}
               />
+            </div>
 
-              {/* Main layout content wrapper */}
-              <div
-                className={`flex-1 flex flex-col transition-all duration-300 ${
-                  user
-                    ? isSidebarExpanded
-                      ? "md:ml-64" // full sidebar width
-                      : "md:ml-16" // collapsed sidebar width
-                    : "ml-0" // no sidebar shifting if not logged in
-                }`}
-              >
-                <Navbar />
+            <div
+              className={`flex-1 flex flex-col  transition-all duration-300 ${
+                user
+                  ? isSidebarExpanded
+                    ? "md:ml-64"
+                    : "md:ml-16"
+                  : "ml-0"
+              }`}
+            >
+              {!isChat && <Navbar />}
 
-                {/* Nested Routes inside layout */}
+              <div className="flex-1 ">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/post/:postid" element={<PostSection />} />
@@ -93,15 +86,25 @@ export default function App() {
                   <Route path="/user/:userid/following" element={<FollowingPage />} />
                   <Route path="/user/:userid/follower" element={<FollowerPage />} />
                   <Route path="/user/edit" element={<ProfileEdit />} />
-                </Routes>
 
-                {/* Optional: Mobile bottom navigation */}
-                {/* <BottomNavbar /> */}
+                  <Route path="/chat" element={<ChatLayout />}>
+                    <Route index element={<EmptyState />} />
+                    <Route path=":receiverId" element={<ChatPage />} />
+                  </Route>
+                </Routes>
               </div>
             </div>
-          }
-        />
-      </Routes>
+          </div>
+        }
+      />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout />
     </BrowserRouter>
   );
 }
