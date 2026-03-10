@@ -76,7 +76,7 @@ const ChatPage = () => {
         {data?.message?.map((msg, i) => {
           const isMe = msg.senderId?.toString() === currentUserId?.toString();
           return (
-            <div key={msg._id || i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+            <div key={msg._id || i} className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}>
               <div
                 className={`p-3 min-w-[80px] flex flex-col rounded-2xl max-w-sm break-words whitespace-pre-wrap ${
                   isMe
@@ -109,7 +109,7 @@ const ChatPage = () => {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="p-4 bg-white border-t flex gap-2 shrink-0 overflow-hidden">
+      <form onSubmit={handleSend} className="p-4 bg-white border-t flex gap-2 shrink-0 overflow-hidden w-full">
         <input
           className="flex-1 min-w-0 border border-gray-300 rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-blue-200"
           value={text}
