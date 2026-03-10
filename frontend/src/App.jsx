@@ -70,7 +70,7 @@ useEffect(() => {
       <Route
         path="/*"
         element={
-          <div className="flex h-screen">
+          <div className="flex h-dvh">
             <div className="app-sidebar">
               <Sidebar
                 isExpanded={isSidebarExpanded}
