@@ -109,14 +109,14 @@ const ChatPage = () => {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSend} className="p-4 bg-white border-t flex gap-2 shrink-0 ">
+      <form onSubmit={handleSend} className="p-4 bg-white border-t flex gap-2 shrink-0 overflow-hidden">
         <input
-          className="flex-1 border border-gray-300 rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-blue-200"
+          className="flex-1 min-w-0 border border-gray-300 rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-blue-200"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
         />
-        <button type="submit" className="bg-gray-600 text-white px-8 py-2 rounded-full hover:bg-gray-700">
+        <button type="submit" className="bg-gray-600 text-white px-4 py-2 rounded-full hover:bg-gray-700 shrink-0">
           Send
         </button>
       </form>

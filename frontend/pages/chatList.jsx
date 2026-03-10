@@ -19,7 +19,7 @@ const ChatList = () => {
   const chats = data?.message || []; 
 
   return (
-    <div className="w-full h-full max-w-md mx-auto bg-white shadow-md overflow-auto border">
+    <div className="w-full h-full max-w-md mx-auto bg-white shadow-md overflow-auto border pb-20 sm:pb-0">
       <div className="divide-y divide-gray-200">
         {chats.length > 0 ? (
           chats.map((user) => (
