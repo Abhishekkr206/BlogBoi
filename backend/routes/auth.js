@@ -57,6 +57,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     httpOnly: true,
     secure: true,           // Always true for production (HTTPS)
     sameSite: "None",       // Required for cross-origin cookies
+    domain: process.env.COOKIE_DOMAIN,
     path: "/",
   };
 
@@ -353,6 +354,7 @@ router.post("/refresh", async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      domain: process.env.COOKIE_DOMAIN,
       maxAge: 15 * 60 * 1000,
       path: "/",
     });
@@ -371,6 +373,7 @@ router.post("/logout", async (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    domain: process.env.COOKIE_DOMAIN,
     path: "/",
   });
   
@@ -378,6 +381,7 @@ router.post("/logout", async (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    domain: process.env.COOKIE_DOMAIN,
     path: "/",
   });
   

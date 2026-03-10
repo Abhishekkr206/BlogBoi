@@ -13,7 +13,6 @@ import FollowerPage from "../pages/follower";
 import ChatPage from "../pages/message";
 import ChatLayout from "../layout/chatLayout";
 import EmptyState from "../pages/emptyState";
-
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../features/auth/authSlicer";
 
@@ -21,7 +20,6 @@ function AppLayout() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const dispatch = useDispatch();
   const location = useLocation();
-
   const user = useSelector((state) => state.auth.user?._id);
 
   useEffect(() => {
@@ -67,7 +65,7 @@ function AppLayout() {
             </div>
 
             <div
-              className={`flex-1 flex flex-col  transition-all duration-300 ${
+              className={`flex-1 flex flex-col transition-all duration-300 min-h-0 ${
                 user
                   ? isSidebarExpanded
                     ? "md:ml-64"
@@ -77,7 +75,7 @@ function AppLayout() {
             >
               {!isChat && <Navbar />}
 
-              <div className="flex-1 ">
+              <div className={`flex-1 min-h-0 ${isChat ? "overflow-hidden" : ""}`}>
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/post/:postid" element={<PostSection />} />

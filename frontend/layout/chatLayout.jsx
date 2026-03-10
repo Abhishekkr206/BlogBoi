@@ -14,10 +14,10 @@ export default function ChatLayout() {
         `}</style>
       )}
 
-      <div className="flex h-full overflow-hidden w-full">
+      <div className="flex h-full w-full overflow-hidden">
         <div
-          className={`h-full sm:min-w-[350px] ${
-            receiverId ? "hidden md:block md:w-auto" : "w-full md:w-auto"
+          className={`h-full shrink-0 sm:w-[350px] ${
+            receiverId ? "hidden md:block" : "w-full md:w-[350px]"
           }`}
         >
           <ChatList />
