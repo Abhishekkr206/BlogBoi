@@ -46,7 +46,7 @@ const ChatPage = () => {
     <div className="flex flex-col h-full w-full bg-gray-50">
 
       {/* Mobile-only header */}
-      <div className="flex items-center justify-between gap-3 p-3 bg-white border-b md:hidden shrink-0">
+      <div className="flex items-center justify-between gap-3 p-3 bg-white border-b md:hidden">
         <div
           className="flex items-center gap-2 min-w-0"
           onClick={() => navigate(`/user/${receiverId}`)}

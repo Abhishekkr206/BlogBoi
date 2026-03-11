@@ -70,7 +70,7 @@ useEffect(() => {
       <Route
         path="/*"
         element={
-          <div className="flex h-dvh">
+          <div className="flex ">
             <div className="app-sidebar">
               <Sidebar
                 isExpanded={isSidebarExpanded}
@@ -79,17 +79,19 @@ useEffect(() => {
             </div>
 
             <div
-              className={`flex-1 flex flex-col transition-all duration-300 min-h-0 ${
+              className={`flex-1 flex flex-col transition-all duration-300 min-w-0 min-h-0 ${
                 user
-                  ? isSidebarExpanded
-                    ? "md:ml-64"
-                    : "md:ml-16"
+                  ? isChat 
+                    ? "ml-0 md:ml-64 h-dvh" 
+                    : isSidebarExpanded
+                      ? "md:ml-64" 
+                      : "md:ml-16"
                   : "ml-0"
               }`}
             >
               {!isChat && <Navbar />}
 
-              <div className={`flex-1 min-h-0 ${isChat ? "overflow-hidden" : ""}`}>
+              <div className={`flex-1 ${isChat ? "overflow-hidden" : "min-h-screen"}`}>
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/post/:postid" element={<PostSection />} />
