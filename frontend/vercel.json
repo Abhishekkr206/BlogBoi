@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://api.blogboi.fun/sitemap.xml"
+    },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
