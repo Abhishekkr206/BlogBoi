@@ -12,12 +12,18 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 import { Provider } from 'react-redux'
 import { store } from '../app/store.js'
 
+//SEO
+import { HelmetProvider } from 'react-helmet-async'
+
 createRoot(document.getElementById('root')).render(
-  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-    <Provider store={store}>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
-    </Provider>
-  </GoogleOAuthProvider>
+  <HelmetProvider>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Provider store={store}>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </Provider>
+    </GoogleOAuthProvider>
+  </HelmetProvider>
 )
+

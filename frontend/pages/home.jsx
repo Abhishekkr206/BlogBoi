@@ -4,6 +4,7 @@ import { LoaderOne as Spinner } from "../components/spinner";
 import { LoaderTwo } from "../components/spinner";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useGetPostsQuery } from "../features/post/postApi";
+import SEO from "../components/SEO";
 
 export default function Home() {
   // Current page number for pagination
@@ -52,6 +53,7 @@ export default function Home() {
 
   return (
     <div className="w-full min-h-screen">
+      <SEO />
       <InfiniteScroll
         dataLength={allPosts.length} // Tells component how many items are rendered
         next={fetchMore} // Function to load more data

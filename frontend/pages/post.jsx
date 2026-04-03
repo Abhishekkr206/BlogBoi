@@ -21,6 +21,7 @@ import {
 import { useSelector } from "react-redux";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useToast } from "../components/Toast";
+import SEO from "../components/SEO";
 
 export default function PostSection() {
   const { postid } = useParams();
@@ -197,10 +198,17 @@ export default function PostSection() {
     : {}; // window scroll on mobile/tablet
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 pb-32">
+    <main className="flex flex-col lg:flex-row gap-8 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 pb-32">
+      <SEO 
+        title={title} 
+        description={content} 
+        image={img} 
+        type="article" 
+        url={`https://blogboi.fun/post/${postid}`} 
+      />
 
       {/* LEFT: POST (natural height) */}
-      <div
+      <article
         ref={leftRef}
         className="w-full lg:flex-1 lg:basis-7/10 border rounded-lg shadow-md p-4 sm:p-6 flex flex-col gap-4 bg-white"
       >
@@ -273,7 +281,7 @@ export default function PostSection() {
 
         {/* Title + Image + Content */}
         <div className="flex flex-col gap-4 mt-2">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold break-words">{title}</h2>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold break-words">{title}</h1>
 
           {img && (
             <img
@@ -289,7 +297,7 @@ export default function PostSection() {
             dangerouslySetInnerHTML={{ __html: content }}
           />
         </div>
-      </div>
+      </article>
 
       {/* RIGHT: COMMENTS (matches left height on desktop; scrolls if needed) */}
       <div
@@ -335,6 +343,6 @@ export default function PostSection() {
           </div>
         </InfiniteScroll>
       </div>
-    </div>
+    </main>
   );
 }

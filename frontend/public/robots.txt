@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /chat/
+Disallow: /user/edit
+
+Sitemap: https://blogboi.fun/sitemap.xml

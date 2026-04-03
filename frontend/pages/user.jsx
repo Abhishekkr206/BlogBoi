@@ -8,6 +8,7 @@ import { LoaderTwo } from "../components/spinner";
 import PostCard from "../components/postCard";
 import { useToast } from "../components/Toast";
 import { UserRound, UserPlus, UserMinus ,Pencil ,MessageSquare } from "lucide-react";
+import SEO from "../components/SEO";
 
 export default function UserProfile() {
 
@@ -100,6 +101,12 @@ export default function UserProfile() {
 
   return (
     <div className="max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
+      <SEO 
+        title={`${username}'s Profile`}
+        description={bio || `Check out ${name} (@${username}) on BlogBoi.`}
+        image={profileimg}
+        url={`https://blogboi.fun/user/${userid}`}
+      />
 
       {/* ---------- Profile Header ---------- */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b pb-4 gap-4 sm:gap-0">
