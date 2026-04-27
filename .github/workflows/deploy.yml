@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'backend/**'
+      - "backend/**"
 
 jobs:
   deploy:
@@ -19,7 +19,7 @@ jobs:
 
       # Step 2: Login to GitHub Container Registry (ghcr.io)
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -27,7 +27,7 @@ jobs:
 
       # Step 3: Build Docker image from ./backend and push to ghcr.io
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./backend
           push: true
