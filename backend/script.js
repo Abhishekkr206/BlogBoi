@@ -62,7 +62,7 @@ const io = new Server(server, {
     origin: [
       "https://blogboi.vercel.app",
       "https://blogboi.fun",
-      "http://localhost:5173" // Keep for local development
+      // "http://localhost:5173" // Keep for local development
     ],
     credentials: true
   }
