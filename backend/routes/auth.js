@@ -29,6 +29,14 @@ cloudinary.config({
 const router = express.Router();
 router.use(express.json());
 
+// Strict rate limiter for auth endpoints
+const rateLimit = require("express-rate-limit");
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: "Too many attempts, try again after 15 minutes" }
+});
+
 // Email transport config for sending OTP mails
 const transport = nodemailer.createTransport({
   service: "gmail",
@@ -75,7 +83,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 };
 
 // Validate OTP & create user
-router.post("/validateotp", async (req, res) => {
+router.post("/validateotp", authLimiter, async (req, res) => {
   const { email, otp, name, username, password } = req.body;
   
   try {
@@ -167,7 +175,7 @@ router.post("/google", async (req, res) => {
 });
 
 // Signup (normal + Google signup flow)
-router.post("/signup", async (req, res) => {
+router.post("/signup", authLimiter, async (req, res) => {
   const { username, name, email, password, google, profileimg } = req.body;
 
   try {
@@ -292,7 +300,7 @@ router.post("/signup", async (req, res) => {
 });
 
 // Login
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   try {
     const { user, password } = req.body;
 
@@ -333,7 +341,7 @@ router.post("/login", async (req, res) => {
 });
 
 // Refresh access token using refresh token
-router.post("/refresh", async (req, res) => {
+router.post("/refresh", authLimiter, async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
 

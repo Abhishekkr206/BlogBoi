@@ -8,14 +8,14 @@ const genrateAccessToken = (user) => {
     return jwt.sign(
         { id: user._id},
         JWT_SECRET,
-        { expiresIn: "1d" }
+        { expiresIn: "15m" }
     )
 }
 const genrateRefreshToken = (user) => {
     return jwt.sign(
         { id: user._id},
         REFRESH_TOKEN_SECRET,
-        { expiresIn: "365d" }
+        { expiresIn: "7d" }
     )
 }
 

@@ -6,6 +6,8 @@ const helmet = require("helmet")
 const mongoose = require("mongoose")
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
+const rateLimit = require("express-rate-limit")
+const mongoSanitize = require("express-mongo-sanitize")
 const http = require("http")
 const { Server } = require("socket.io")
 
@@ -33,7 +35,13 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
 app.use(cookieParser())
-app.use(express.json())
+app.use(express.json({ limit: "1mb" }))
+app.use(mongoSanitize())
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { message: "Too many requests, please try again later" }
+}))
 
 // CORS Configuration for Production
 app.use(cors({
