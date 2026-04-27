@@ -36,7 +36,12 @@ app.use(helmet({
 }))
 app.use(cookieParser())
 app.use(express.json({ limit: "1mb" }))
-app.use(mongoSanitize())
+app.use(express.urlencoded({ extended: true }))
+app.use((req, res, next) => {
+  if (req.body) req.body = mongoSanitize.sanitize(req.body);
+  if (req.params) req.params = mongoSanitize.sanitize(req.params);
+  next();
+});
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -62,7 +67,7 @@ const io = new Server(server, {
     origin: [
       "https://blogboi.vercel.app",
       "https://blogboi.fun",
-      // "http://localhost:5173" // Keep for local development
+      "http://localhost:5173" // Keep for local development
     ],
     credentials: true
   }
